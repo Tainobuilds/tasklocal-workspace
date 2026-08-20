@@ -1,0 +1,9 @@
+[
+  {
+    "booking_id": "book_501",
+    "listing_id": "list_101",
+    "customer_id": "cust_00042",
+    "scheduled_at": "2026-08-25T10:00:00Z",
+    "booking_status": "confirmed"
+  }
+]
