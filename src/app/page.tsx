@@ -1,44 +1,48 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Store, MessageSquare, Search, CheckCircle } from 'lucide-react';
+import { Store, MessageSquare, X } from 'lucide-react';
+import ProviderDashboard from '@/components/ProviderDashboard';
+import MatchingChatbot from '@/components/MatchingChatbot';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>('provider');
   const [listings, setListings] = useState<any[]>([]);
-  const [query, setQuery] = useState('');
-  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; matches?: any[] }>>([
-    { sender: 'bot', text: 'Hello! What service are you looking for today? Try typing "cleaning" or "handyman".' }
-  ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ title: '', category: '', price: '', description: '' });
 
-  useEffect(() => {
+  const fetchListings = () => {
     fetch('/api/listings')
       .then((res) => res.json())
-      .then((data) => setListings(Array.isArray(data) ? data : []));
+      .then((data) => setListings(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchListings();
   }, []);
 
-  const handleChatSearch = (e: React.FormEvent) => {
+  const handleCreateListing = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    if (!formData.title) return;
 
-    const userText = query;
-    setQuery('');
+    const newEntry = {
+      id: `list-${Date.now()}`,
+      title: formData.title,
+      category: formData.category || 'General',
+      price_per_hour: Number(formData.price) || 0,
+      description: formData.description || 'No description provided.'
+    };
 
-    const matched = listings.filter((item) =>
-      item.title?.toLowerCase().includes(userText.toLowerCase()) ||
-      item.category?.toLowerCase().includes(userText.toLowerCase()) ||
-      item.description?.toLowerCase().includes(userText.toLowerCase())
-    );
+    await fetch('/api/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newEntry)
+    });
 
-    setChatMessages((prev) => [
-      ...prev,
-      { sender: 'user', text: userText },
-      {
-        sender: 'bot',
-        text: matched.length > 0 ? `I found ${matched.length} matching service(s) for you:` : "I couldn't find any listings matching that description.",
-        matches: matched
-      }
-    ]);
+    setFormData({ title: '', category: '', price: '', description: '' });
+    setIsModalOpen(false);
+    fetchListings();
   };
 
   return (
@@ -73,79 +77,73 @@ export default function Home() {
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {activeTab === 'provider' ? (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold">Provider Dashboard</h1>
-              <p className="text-slate-400 text-sm">Manage active local listings and services</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {listings.map((item, idx) => (
-                <div key={item.id || idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider bg-indigo-950 text-indigo-400 border border-indigo-800/50 px-2.5 py-0.5 rounded-full">
-                      {item.category || 'Service'}
-                    </span>
-                    <span className="font-bold text-emerald-400">${item.price_per_hour || item.price || 0}/hr</span>
-                  </div>
-                  <h3 className="font-semibold text-lg text-slate-100">{item.title || item.name}</h3>
-                  <p className="text-slate-400 text-sm mt-1 line-clamp-2">{item.description || 'No description available.'}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProviderDashboard listings={listings} onOpenModal={() => setIsModalOpen(true)} />
         ) : (
-          <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col h-[600px]">
-            <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center gap-3">
-              <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-medium text-sm">TaskLocal AI Match Assistant</span>
-            </div>
+          <MatchingChatbot listings={listings} />
+        )}
+      </main>
 
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div
-                    className={`max-w-[80%] p-3.5 rounded-2xl text-sm ${
-                      msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-
-                  {msg.matches && msg.matches.length > 0 && (
-                    <div className="mt-3 w-full space-y-2">
-                      {msg.matches.map((item, matchIdx) => (
-                        <div key={matchIdx} className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center">
-                          <div>
-                            <div className="font-medium text-sm text-slate-200">{item.title || item.name}</div>
-                            <div className="text-xs text-slate-500">{item.category} • ${item.price_per_hour || item.price}/hr</div>
-                          </div>
-                          <button className="flex items-center gap-1 text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg">
-                            <CheckCircle size={12} /> Book
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-slate-100">Create New Listing</h2>
+            <form onSubmit={handleCreateListing} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Service Title</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g., Deep Apartment Cleaning"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Cleaning"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleChatSearch} className="p-3 border-t border-slate-800 flex gap-2">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask for a service (e.g., 'cleaning')..."
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
-              />
-              <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white p-2.5 rounded-xl transition-all">
-                <Search size={18} />
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="45"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Briefly describe the service..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition-all text-sm mt-2"
+              >
+                Save & Add Listing
               </button>
             </form>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }
