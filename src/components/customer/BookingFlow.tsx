@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { CheckCircle2, Loader2, X } from 'lucide-react';
 
 import BookingCalendar, { describeSlot } from './BookingCalendar';
@@ -232,13 +233,21 @@ export default function BookingFlow({ listing, onClose }: Props) {
               {bookingId && (
                 <p className="text-xs text-slate-500 font-mono">Reference: {bookingId}</p>
               )}
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                Done
-              </button>
+              <div className="flex gap-3 justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2 rounded-lg text-sm text-slate-300 border border-slate-800 hover:border-slate-700"
+                >
+                  Keep browsing
+                </button>
+                <Link
+                  href="/bookings"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  View my bookings
+                </Link>
+              </div>
             </div>
           )}
         </div>

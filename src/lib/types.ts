@@ -43,7 +43,7 @@ export interface CleanProvider {
 
 /** One rejected/repaired record, kept so the dashboard can surface data problems. */
 export interface DataIssue {
-  scope: 'listing' | 'provider';
+  scope: 'listing' | 'provider' | 'booking';
   /** The record's id, or a positional marker when the id itself is unusable. */
   id: string;
   severity: 'dropped' | 'repaired';
@@ -77,4 +77,42 @@ export interface Address {
   city: string;
   state: string;
   postal_code: string;
+}
+
+export const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'] as const;
+export type BookingStatus = (typeof BOOKING_STATUSES)[number];
+
+/**
+ * The listing a booking points at, resolved *without* the active-only filter.
+ * A customer who booked a listing that was later flagged or removed must still
+ * see what they booked, so this deliberately includes non-active listings.
+ */
+export interface BookedListingRef {
+  listing_id: string;
+  title: string | null;
+  service_type: ServiceType | null;
+  price: number | null;
+  listing_status: string | null;
+  /** True when the listing is no longer offered on the marketplace. */
+  withdrawn: boolean;
+  provider: CleanProvider | null;
+}
+
+export interface CleanBooking {
+  booking_id: string;
+  customer_id: string | null;
+  /** `null` when `scheduled_at` was missing or unparseable. */
+  scheduledAt: string | null;
+  status: BookingStatus | 'unknown';
+  /** The original status string, kept so an unrecognised value can be shown. */
+  rawStatus: string | null;
+  address: Address | null;
+  /** `null` when the booking references a listing that no longer exists. */
+  listing: BookedListingRef | null;
+  listingId: string | null;
+}
+
+export interface BookingsResult {
+  bookings: CleanBooking[];
+  issues: DataIssue[];
 }

@@ -4,21 +4,19 @@ import { useMemo, useState } from 'react';
 import { SearchX } from 'lucide-react';
 
 import BookingFlow from './BookingFlow';
-import DataQualityPanel from './DataQualityPanel';
 import FilterBar from './FilterBar';
 import ListingCard from './ListingCard';
 import ListingErrorBoundary from './ListingErrorBoundary';
 import { normalizePriceRange, slotKey } from '@/lib/sanitize';
-import type { CleanListing, DataIssue, Filters } from '@/lib/types';
+import type { CleanListing, Filters } from '@/lib/types';
 
 const NO_FILTERS: Filters = { serviceTypes: [], minPrice: null, maxPrice: null, slots: [] };
 
 interface Props {
   listings: CleanListing[];
-  issues: DataIssue[];
 }
 
-export default function CustomerApp({ listings, issues }: Props) {
+export default function CustomerApp({ listings }: Props) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [booking, setBooking] = useState<CleanListing | null>(null);
 
@@ -93,8 +91,6 @@ export default function CustomerApp({ listings, issues }: Props) {
           Browse verified local providers and book in a few steps.
         </p>
       </div>
-
-      <DataQualityPanel issues={issues} />
 
       <FilterBar
         filters={filters}

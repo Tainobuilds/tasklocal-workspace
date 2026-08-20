@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 
+import { DEMO_CUSTOMER_ID } from '@/lib/demo-session';
 import { PERIOD_HOURS, slotKey } from '@/lib/sanitize';
 import { getCatalogue, readJsonFile, writeJsonFile } from '@/lib/server-data';
 import { WEEKDAYS, type Period, type Weekday } from '@/lib/types';
-
-/** No auth layer yet — bookings are attributed to a fixed demo customer. */
-const DEMO_CUSTOMER_ID = 'cust_00042';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 

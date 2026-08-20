@@ -11,8 +11,14 @@
  */
 
 import {
+  BOOKING_STATUSES,
   SERVICE_TYPES,
+  type Address,
   type AvailabilitySlot,
+  type BookedListingRef,
+  type BookingStatus,
+  type BookingsResult,
+  type CleanBooking,
   type CleanListing,
   type CleanProvider,
   type DataIssue,
@@ -389,6 +395,183 @@ export function sanitizeListings(rawListings: unknown, rawProviders: unknown): L
   }
 
   return { listings, issues };
+}
+
+/**
+ * Indexes every listing by id for booking history, *including* flagged and
+ * removed ones. The customer-facing catalogue hides those, but a booking the
+ * customer already made must still show what it was for.
+ */
+export function buildListingIndex(
+  rawListings: unknown,
+  rawProviders: unknown,
+): Map<string, BookedListingRef> {
+  const index = new Map<string, BookedListingRef>();
+  if (!Array.isArray(rawListings)) return index;
+
+  const { providers } = sanitizeProviders(rawProviders);
+
+  const withIds = rawListings.filter(
+    (record): record is Record<string, unknown> =>
+      !!record && typeof record === 'object' && typeof (record as never)['listing_id'] === 'string',
+  );
+  const { unique } = dedupeById(withIds, 'listing_id');
+
+  for (const record of unique) {
+    const id = String(record['listing_id']);
+    const status = coerceText(record['listing_status'])?.toLowerCase() ?? null;
+    const providerId = coerceText(record['provider_id']);
+
+    index.set(id, {
+      listing_id: id,
+      title: coerceText(record['title']),
+      service_type: coerceServiceType(record['service_type']),
+      price: coercePrice(record['price']),
+      listing_status: status,
+      withdrawn: status !== 'active',
+      provider: providerId ? providers.get(providerId) ?? null : null,
+    });
+  }
+
+  return index;
+}
+
+function coerceAddress(raw: unknown): Address | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const record = raw as Record<string, unknown>;
+  const line1 = coerceText(record['line1']);
+  if (!line1) return null;
+
+  return {
+    line1,
+    line2: coerceText(record['line2']) ?? '',
+    city: coerceText(record['city']) ?? '',
+    state: coerceText(record['state']) ?? '',
+    postal_code: coerceText(record['postal_code']) ?? '',
+  };
+}
+
+/** Accepts only a timestamp that actually parses; `"not scheduled yet"` does not. */
+function coerceTimestamp(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const ms = new Date(raw).getTime();
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
+/**
+ * Validates booking records for a customer's history.
+ *
+ * Deliberately more permissive than `sanitizeListings`: a booking is the
+ * customer's own record, so a bad field degrades to a placeholder and the
+ * booking still appears. Only a record with no usable `booking_id` — which
+ * could not be referenced or supported — is dropped.
+ */
+export function sanitizeBookings(
+  rawBookings: unknown,
+  rawListings: unknown,
+  rawProviders: unknown,
+): BookingsResult {
+  const issues: DataIssue[] = [];
+
+  if (!Array.isArray(rawBookings)) {
+    issues.push({
+      scope: 'booking',
+      id: '—',
+      severity: 'dropped',
+      reason: 'Booking data was not an array; no history could be loaded.',
+    });
+    return { bookings: [], issues };
+  }
+
+  const listingIndex = buildListingIndex(rawListings, rawProviders);
+
+  const withIds: Record<string, unknown>[] = [];
+  rawBookings.forEach((record, index) => {
+    if (!record || typeof record !== 'object' || typeof (record as never)['booking_id'] !== 'string') {
+      issues.push({
+        scope: 'booking',
+        id: `#${index}`,
+        severity: 'dropped',
+        reason: 'Booking has no usable booking_id.',
+      });
+      return;
+    }
+    withIds.push(record as Record<string, unknown>);
+  });
+
+  const { unique, duplicates } = dedupeById(withIds, 'booking_id');
+  for (const dup of duplicates) {
+    issues.push({
+      scope: 'booking',
+      id: dup.id,
+      severity: 'repaired',
+      reason: `Duplicate booking_id; kept the record chosen by ${dup.kept}.`,
+    });
+  }
+
+  const bookings: CleanBooking[] = [];
+
+  for (const record of unique) {
+    const id = String(record['booking_id']);
+
+    try {
+      const scheduledAt = coerceTimestamp(record['scheduled_at']);
+      if (record['scheduled_at'] != null && scheduledAt === null) {
+        issues.push({
+          scope: 'booking',
+          id,
+          severity: 'repaired',
+          reason: `scheduled_at ${JSON.stringify(record['scheduled_at'])} is not a valid timestamp; shown as unscheduled.`,
+        });
+      }
+
+      const rawStatus = coerceText(record['booking_status']);
+      const normalized = rawStatus?.toLowerCase() ?? null;
+      const status = (BOOKING_STATUSES as readonly string[]).includes(normalized ?? '')
+        ? (normalized as BookingStatus)
+        : 'unknown';
+
+      if (rawStatus && status === 'unknown') {
+        issues.push({
+          scope: 'booking',
+          id,
+          severity: 'repaired',
+          reason: `booking_status ${JSON.stringify(rawStatus)} is outside ${BOOKING_STATUSES.join('/')}; shown as unknown.`,
+        });
+      }
+
+      const listingId = coerceText(record['listing_id']);
+      const listing = listingId ? listingIndex.get(listingId) ?? null : null;
+      if (listingId && !listing) {
+        issues.push({
+          scope: 'booking',
+          id,
+          severity: 'repaired',
+          reason: `listing_id "${listingId}" no longer exists; booking shown without service details.`,
+        });
+      }
+
+      bookings.push({
+        booking_id: id,
+        customer_id: coerceText(record['customer_id']),
+        scheduledAt,
+        status,
+        rawStatus,
+        address: coerceAddress(record['address']),
+        listing,
+        listingId,
+      });
+    } catch (error) {
+      issues.push({
+        scope: 'booking',
+        id,
+        severity: 'dropped',
+        reason: `Unexpected error while validating: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+  }
+
+  return { bookings, issues };
 }
 
 /**

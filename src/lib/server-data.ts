@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import { sanitizeListings } from './sanitize';
-import type { ListingsResult } from './types';
+import { dedupeById, sanitizeBookings, sanitizeListings } from './sanitize';
+import type { BookingsResult, ListingsResult } from './types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
@@ -61,5 +61,83 @@ export async function getCatalogue(): Promise<ListingsResult> {
         },
       ],
     };
+  }
+}
+
+/**
+ * A single customer's booking history, newest first.
+ *
+ * Listings are resolved against the full listing file rather than the active
+ * catalogue, so a booking survives its listing being flagged or removed.
+ */
+export async function getCustomerBookings(customerId: string): Promise<BookingsResult> {
+  try {
+    const [rawBookings, rawListings, rawProviders] = await Promise.all([
+      readJsonFile('bookings.json'),
+      readJsonFile('listings.json'),
+      readJsonFile('providers.json'),
+    ]);
+
+    const { bookings, issues } = sanitizeBookings(rawBookings, rawListings, rawProviders);
+
+    for (const issue of issues) {
+      const log = issue.severity === 'dropped' ? console.warn : console.info;
+      log(`[tasklocal:data] ${issue.severity} ${issue.scope} ${issue.id} — ${issue.reason}`);
+    }
+
+    const mine = bookings
+      .filter((booking) => booking.customer_id === customerId)
+      // Undated bookings sort to the top; they are the ones needing attention.
+      .sort((a, b) => (b.scheduledAt ?? '9999').localeCompare(a.scheduledAt ?? '9999'));
+
+    return { bookings: mine, issues };
+  } catch (error) {
+    console.error('[tasklocal] Failed to load bookings:', error);
+    return {
+      bookings: [],
+      issues: [
+        {
+          scope: 'booking',
+          id: '—',
+          severity: 'dropped',
+          reason: `Bookings could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      ],
+    };
+  }
+}
+
+export interface CustomerSummary {
+  customer_id: string;
+  customer_name: string | null;
+}
+
+/**
+ * The customer list behind the demo "view as" switcher. Stands in for auth,
+ * and doubles as a way to inspect the messier booking histories in the data.
+ */
+export async function getCustomers(): Promise<CustomerSummary[]> {
+  try {
+    const raw = await readJsonFile('customers.json');
+    if (!Array.isArray(raw)) return [];
+
+    const withIds = raw.filter(
+      (record): record is Record<string, unknown> =>
+        !!record && typeof record === 'object' && typeof (record as never)['customer_id'] === 'string',
+    );
+    const { unique } = dedupeById(withIds, 'customer_id');
+
+    return unique
+      .map((record) => ({
+        customer_id: String(record['customer_id']),
+        customer_name:
+          typeof record['customer_name'] === 'string' && record['customer_name'].trim().length > 0
+            ? record['customer_name'].trim()
+            : null,
+      }))
+      .sort((a, b) => a.customer_id.localeCompare(b.customer_id));
+  } catch (error) {
+    console.error('[tasklocal] Failed to load customers:', error);
+    return [];
   }
 }
