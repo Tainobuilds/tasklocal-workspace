@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, CheckCircle, Sparkles, Star, Zap, X, SearchX, Loader2 } from 'lucide-react';
+import { Search, CheckCircle, Sparkles, Star, Zap, X, SearchX, Loader2, BadgeCheck } from 'lucide-react';
 
 interface Props {
   listings: any[];
+  onBookingConfirmed?: (booking: any) => void;
 }
 
 const CATEGORY_SUGGESTIONS = [
@@ -56,6 +57,26 @@ const getResponseTime = (item: any) => {
   return 5 + (seed % 5) * 5;
 };
 
+const getVerified = (item: any) => {
+  if (typeof item.verified === 'boolean') return item.verified;
+  const seed = hashString(`${item.id || item.title || item.name || 'service'}-verified`);
+  return seed % 5 !== 0; // ~80% of pros are Verified
+};
+
+const getAvailableToday = (item: any) => {
+  if (typeof item.available_today === 'boolean') return item.available_today;
+  const seed = hashString(`${item.id || item.title || item.name || 'service'}-avail`);
+  return seed % 3 !== 0; // ~66% available today
+};
+
+const QUICK_FILTERS = [
+  { key: 'availableToday', label: '⚡ Available Today' },
+  { key: 'under60', label: '💰 Under $60/hr' },
+  { key: 'topRated', label: '⭐ Top Rated (4.8+)' }
+] as const;
+
+type FilterKey = (typeof QUICK_FILTERS)[number]['key'];
+
 interface ChatMessage {
   sender: 'user' | 'bot';
   text: string;
@@ -64,7 +85,7 @@ interface ChatMessage {
   resolved?: boolean;
 }
 
-export default function MatchingChatbot({ listings }: Props) {
+export default function MatchingChatbot({ listings, onBookingConfirmed }: Props) {
   const [query, setQuery] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { sender: 'bot', text: 'Hello! What service are you looking for today? Select a quick category below or type a query.' }
@@ -75,6 +96,30 @@ export default function MatchingChatbot({ listings }: Props) {
   const [bookingStatus, setBookingStatus] = useState<'form' | 'success'>('form');
   const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
   const [confettiPieces, setConfettiPieces] = useState<Array<{ id: number; left: number; color: string; delay: number; rotate: number }>>([]);
+
+  const [activeFilters, setActiveFilters] = useState<Record<FilterKey, boolean>>({
+    availableToday: false,
+    under60: false,
+    topRated: false
+  });
+
+  const toggleFilter = (key: FilterKey) => {
+    setActiveFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const hasActiveFilters = Object.values(activeFilters).some(Boolean);
+  const hasAnyResults = chatMessages.some((m) => m.matches);
+
+  const applyFilters = (items: any[]) =>
+    items.filter((item) => {
+      if (activeFilters.availableToday && !getAvailableToday(item)) return false;
+      if (activeFilters.under60) {
+        const price = item.price_per_hour || item.price || item.rate || 0;
+        if (price >= 60) return false;
+      }
+      if (activeFilters.topRated && parseFloat(getRating(item)) < 4.8) return false;
+      return true;
+    });
 
   const runMatch = (term: string, isAll: boolean) => {
     const intentCategories = matchIntentCategories(term);
@@ -186,6 +231,16 @@ export default function MatchingChatbot({ listings }: Props) {
         { sender: 'bot', text: `✅ Booking confirmed for ${title} — estimated total $${bookingTotal.toFixed(2)}.` }
       ]);
 
+      onBookingConfirmed?.({
+        title,
+        category: bookingListing?.category || bookingListing?.type || 'General',
+        hours: bookingHours,
+        hourlyRate,
+        serviceFee: SERVICE_FEE,
+        total: bookingTotal,
+        status: 'Confirmed'
+      });
+
       setTimeout(() => closeBookingModal(), 2200);
     }, 700);
   };
@@ -207,6 +262,35 @@ export default function MatchingChatbot({ listings }: Props) {
           <Sparkles size={12} className="text-indigo-400" /> Instant Search Active
         </span>
       </div>
+
+      {/* Smart Quick-Filters */}
+      {hasAnyResults && (
+        <div className="px-4 py-2.5 border-b border-slate-800 bg-slate-950/40 flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide shrink-0">Filters</span>
+          {QUICK_FILTERS.map((filter) => (
+            <button
+              key={filter.key}
+              onClick={() => toggleFilter(filter.key)}
+              aria-pressed={activeFilters[filter.key]}
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                activeFilters[filter.key]
+                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-900/40'
+                  : 'bg-slate-800 border-slate-700/60 text-slate-300 hover:bg-slate-700/60 hover:text-white'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+          {hasActiveFilters && (
+            <button
+              onClick={() => setActiveFilters({ availableToday: false, under60: false, topRated: false })}
+              className="text-[11px] text-slate-500 hover:text-slate-300 underline ml-auto focus:outline-none"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Messages Feed */}
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
@@ -240,47 +324,69 @@ export default function MatchingChatbot({ listings }: Props) {
               </div>
             )}
 
-            {msg.matches && msg.matches.length > 0 && (
-              <div className="mt-3 w-full space-y-2">
-                {msg.matches.map((item, matchIdx) => {
-                  const title = item.title || item.name || item.service_name || 'Service';
-                  const price = item.price_per_hour || item.price || item.rate || 0;
-                  const rating = getRating(item);
-                  const responseTime = getResponseTime(item);
-                  return (
-                    <div
-                      key={matchIdx}
-                      style={{ animationDelay: `${matchIdx * 60}ms` }}
-                      className="animate-in fade-in slide-in-from-bottom-2 bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-lg hover:shadow-black/30"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-semibold text-[15px] text-slate-100 truncate">{title}</span>
-                          <span className="font-bold text-emerald-400 text-sm shrink-0">${price}/hr</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                          <span className="text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
-                            {item.category || 'General'}
-                          </span>
-                          <span className="flex items-center gap-0.5 text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
-                            <Star size={10} className="fill-amber-400 text-amber-400" /> {rating}
-                          </span>
-                          <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                            <Zap size={10} className="text-emerald-500" /> ~{responseTime}m
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => openBookingModal(item)}
-                        className="shrink-0 self-center flex items-center gap-1 text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-emerald-600/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        <CheckCircle size={12} /> Book
-                      </button>
+            {msg.matches && msg.matches.length > 0 && (() => {
+              const filteredMatches = applyFilters(msg.matches);
+
+              if (filteredMatches.length === 0) {
+                return (
+                  <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-950 border border-dashed border-slate-800 rounded-xl p-5">
+                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center mb-2">
+                      <SearchX size={18} className="text-slate-500" />
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <p className="text-sm text-slate-300 font-medium">No pros match your filters</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-xs">Try loosening or clearing a filter above.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="mt-3 w-full space-y-2">
+                  {filteredMatches.map((item, matchIdx) => {
+                    const title = item.title || item.name || item.service_name || 'Service';
+                    const price = item.price_per_hour || item.price || item.rate || 0;
+                    const rating = getRating(item);
+                    const responseTime = getResponseTime(item);
+                    const verified = getVerified(item);
+                    return (
+                      <div
+                        key={matchIdx}
+                        style={{ animationDelay: `${matchIdx * 60}ms` }}
+                        className="animate-in fade-in slide-in-from-bottom-2 bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-lg hover:shadow-black/30"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="font-semibold text-[15px] text-slate-100 truncate">{title}</span>
+                            <span className="font-bold text-emerald-400 text-sm shrink-0">${price}/hr</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                            <span className="text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
+                              {item.category || 'General'}
+                            </span>
+                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
+                              <Star size={10} className="fill-amber-400 text-amber-400" /> {rating}
+                            </span>
+                            {verified && (
+                              <span className="flex items-center gap-0.5 text-[11px] font-medium text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                                <BadgeCheck size={10} /> Verified Pro
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                              <Zap size={10} className="text-emerald-500" /> ~{responseTime}m response time
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openBookingModal(item)}
+                          className="shrink-0 self-center flex items-center gap-1 text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-emerald-600/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <CheckCircle size={12} /> Book
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {msg.matches && msg.matches.length === 0 && (
               <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-950 border border-dashed border-slate-800 rounded-xl p-5">

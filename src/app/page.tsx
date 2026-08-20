@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Store, MessageSquare, X, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
+import { Store, MessageSquare, X, Sparkles, CheckCircle, Loader2, ClipboardList, Inbox } from 'lucide-react';
 import ProviderDashboard from '@/components/ProviderDashboard';
 import MatchingChatbot from '@/components/MatchingChatbot';
 
@@ -68,8 +68,39 @@ export default function Home() {
   const [toast, setToast] = useState<string | null>(null);
   const [newServiceCount, setNewServiceCount] = useState(0);
 
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isBookingsHydrated, setIsBookingsHydrated] = useState(false);
+  const [isBookingsDrawerOpen, setIsBookingsDrawerOpen] = useState(false);
+
   const knownListingsCountRef = useRef(0);
   const activeTabRef = useRef(activeTab);
+
+  // Hydrate the shared bookings ledger from localStorage on mount.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('tasklocal_bookings');
+      if (stored) setBookings(JSON.parse(stored));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsBookingsHydrated(true);
+    }
+  }, []);
+
+  // Persist the ledger whenever it changes, but only after hydration has
+  // completed so we don't overwrite stored data with the initial empty state.
+  useEffect(() => {
+    if (!isBookingsHydrated) return;
+    try {
+      localStorage.setItem('tasklocal_bookings', JSON.stringify(bookings));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [bookings, isBookingsHydrated]);
+
+  const addBooking = (booking: any) => {
+    setBookings((prev) => [{ id: `booking-${Date.now()}`, bookedAt: new Date().toISOString(), ...booking }, ...prev]);
+  };
 
   useEffect(() => {
     activeTabRef.current = activeTab;
@@ -178,17 +209,31 @@ export default function Home() {
             <span className="font-semibold text-lg tracking-tight">TaskLocal Workspace</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-full">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-slate-400">Active Services</span>
-              <span className="font-semibold text-slate-100">{isInitialLoading ? '—' : activeServicesCount}</span>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1.5 bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-full">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-slate-400">Active Services</span>
+                <span className="font-semibold text-slate-100">{isInitialLoading ? '—' : activeServicesCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-indigo-950/60 border border-indigo-800/40 px-3 py-1 rounded-full text-indigo-300">
+                <Sparkles size={12} />
+                <span>AI Match Rate</span>
+                <span className="font-semibold text-indigo-200">98%</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 bg-indigo-950/60 border border-indigo-800/40 px-3 py-1 rounded-full text-indigo-300">
-              <Sparkles size={12} />
-              <span>AI Match Rate</span>
-              <span className="font-semibold text-indigo-200">98%</span>
-            </div>
+
+            <button
+              onClick={() => setIsBookingsDrawerOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              📋 Activity & Bookings
+              {bookings.length > 0 && (
+                <span className="text-[10px] font-semibold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full leading-none">
+                  {bookings.length}
+                </span>
+              )}
+            </button>
           </div>
 
           <nav className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/50 shrink-0">
@@ -234,7 +279,7 @@ export default function Home() {
           ) : isInitialLoading ? (
             <MatchingChatbotSkeleton />
           ) : (
-            <MatchingChatbot listings={listings} />
+            <MatchingChatbot listings={listings} onBookingConfirmed={addBooking} />
           )}
         </div>
       </main>
@@ -323,6 +368,73 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Global Booking Ledger Drawer */}
+      <div
+        onClick={() => setIsBookingsDrawerOpen(false)}
+        className={`fixed inset-0 bg-black/50 z-[70] transition-opacity duration-300 ${
+          isBookingsDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+      <div
+        className={`fixed inset-y-0 right-0 z-[80] w-full max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+          isBookingsDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <ClipboardList size={18} className="text-indigo-400" />
+            <h2 className="font-semibold text-slate-100">Activity & Bookings</h2>
+          </div>
+          <button onClick={() => setIsBookingsDrawerOpen(false)} className="text-slate-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {bookings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+              <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center mb-3">
+                <Inbox size={20} className="text-slate-500" />
+              </div>
+              <p className="text-sm text-slate-300 font-medium">No bookings yet</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                Book a service from the AI Matcher and it'll show up here with a full receipt.
+              </p>
+            </div>
+          ) : (
+            bookings.map((booking) => (
+              <div key={booking.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span className="font-semibold text-sm text-slate-100">{booking.title}</span>
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                    {booking.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+                  <span>{booking.category}</span>
+                  <span>•</span>
+                  <span>{new Date(booking.bookedAt).toLocaleString()}</span>
+                </div>
+                <div className="space-y-1 text-xs border-t border-slate-800 pt-3">
+                  <div className="flex justify-between text-slate-400">
+                    <span>{booking.hours} hr × ${booking.hourlyRate}/hr</span>
+                    <span>${(booking.hours * booking.hourlyRate).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Service fee</span>
+                    <span>${Number(booking.serviceFee).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-100 font-semibold pt-1 border-t border-slate-800">
+                    <span>Total</span>
+                    <span>${Number(booking.total).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
