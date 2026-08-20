@@ -1,0 +1,15 @@
+[
+  { "review_id": "rev_2031", "booking_id": "book_502", "listing_id": "list_102", "provider_id": "prov_001", "customer_id": "cust_00001", "rating": 4, "review_text": "Did a great job a little late though", "review_date": "2026-06-05" },
+  { "review_id": "rev_2032", "booking_id": "book_504", "listing_id": "list_105", "provider_id": "prov_003", "customer_id": "cust_00013", "rating": 5, "review_text": "Super efficient move, would book again.", "review_date": "2026-06-08" },
+  { "review_id": "rev_2033", "booking_id": "book_507", "listing_id": "list_109", "provider_id": "prov_005", "customer_id": "cust_00031", "rating": 5, "review_text": "Fan looks great and installation was quick.", "review_date": "2026-06-12" },
+  { "review_id": "rev_2034", "booking_id": "book_506", "listing_id": "list_108", "provider_id": "prov_004", "customer_id": "cust_00025", "rating": 4, "review_text": "", "review_date": "2026-06-22" },
+  { "review_id": "rev_2035", "booking_id": "book_501", "listing_id": "list_101", "provider_id": "prov_001", "customer_id": "cust_00042", "rating": 3, "review_text": "Good clean but missed a spot under the couch.", "review_date": "2026-08-26" },
+  { "review_id": "rev_2036", "booking_id": "book_503", "listing_id": "list_103", "provider_id": "prov_002", "customer_id": "cust_00007", "rating": 2, "review_text": "Faucet started leaking again within a week.", "review_date": "2026-06-30" },
+  { "review_id": "rev_2037", "booking_id": "book_508", "listing_id": "list_110", "provider_id": "prov_007", "customer_id": "cust_00044", "rating": 5, "review_text": "Cleaned up perfectly after our party.", "review_date": "2026-08-29" },
+  { "review_id": "rev_2038", "booking_id": "book_505", "listing_id": "list_107", "provider_id": "prov_004", "customer_id": "cust_00019", "rating": 0, "review_text": "Not happy at all.", "review_date": "2026-06-25" },
+  { "review_id": "rev_2039", "booking_id": "book_999", "listing_id": "list_105", "provider_id": "prov_003", "customer_id": "cust_00013", "rating": 5, "review_text": "Great service.", "review_date": "2026-07-02" },
+  { "review_id": "rev_2031", "booking_id": "book_512", "listing_id": "list_106", "provider_id": "prov_003", "customer_id": "cust_00019", "rating": 4, "review_text": "Duplicate review ID test.", "review_date": "2026-08-31" },
+  { "review_id": "rev_2040", "booking_id": "book_509", "listing_id": "list_101", "provider_id": "prov_001", "customer_id": "cust_00099", "rating": "five", "review_text": "Loved it.", "review_date": "2026-08-29" },
+  { "review_id": "rev_2041", "booking_id": "book_502", "listing_id": "list_102", "provider_id": "prov_001", "customer_id": "cust_00001", "review_text": "No rating given but left a comment.", "review_date": "2026-06-06" },
+  { "review_id": "rev_2042", "booking_id": "book_510", "listing_id": "list_999", "provider_id": "prov_006", "customer_id": "cust_00050", "rating": 3, "review_text": "Movers were okay.", "review_date": "2026-13-40" }
+]

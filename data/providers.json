@@ -1,0 +1,15 @@
+[
+  { "provider_id": "prov_001", "provider_name": "Sparkle Clean Co.", "provider_avg_rating": 4.6, "provider_review_count": 47 },
+  { "provider_id": "prov_002", "provider_name": "Handy Dan Repairs", "provider_avg_rating": 4.2, "provider_review_count": 31 },
+  { "provider_id": "prov_003", "provider_name": "QuickMove Logistics", "provider_avg_rating": 3.9, "provider_review_count": 18 },
+  { "provider_id": "prov_004", "provider_name": "Fresh Start Cleaners", "provider_avg_rating": 4.8, "provider_review_count": 62 },
+  { "provider_id": "prov_005", "provider_name": "Reliable Repairs LLC", "provider_avg_rating": 4.0, "provider_review_count": 9 },
+  { "provider_id": "prov_006", "provider_name": "Metro Movers", "provider_avg_rating": 3.5, "provider_review_count": 5 },
+  { "provider_id": "prov_007", "provider_name": "Bright Home Cleaning", "provider_avg_rating": 4.7, "provider_review_count": 23 },
+  { "provider_id": "prov_008", "provider_name": "Fixer Upper Handyman", "provider_avg_rating": 4.1, "provider_review_count": 14 },
+  { "provider_id": "prov_009", "provider_name": null, "provider_avg_rating": 4.3, "provider_review_count": 8 },
+  { "provider_id": "prov_010", "provider_name": "All-Star Cleaning", "provider_avg_rating": 6.2, "provider_review_count": 12 },
+  { "provider_id": "prov_011", "provider_name": "Budget Movers", "provider_avg_rating": 4.5, "provider_review_count": 0 },
+  { "provider_id": "prov_001", "provider_name": "Sparkle Clean Co. LLC", "provider_avg_rating": 3.1, "provider_review_count": 47 },
+  { "provider_id": "prov_012", "provider_name": "Speedy Handyman", "provider_avg_rating": "N/A", "provider_review_count": 4 }
+]
