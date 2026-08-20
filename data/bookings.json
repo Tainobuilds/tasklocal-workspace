@@ -104,5 +104,20 @@
       "postal_code": "s"
     },
     "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_614",
+    "listing_id": "list_103",
+    "customer_id": "cust_00042",
+    "scheduled_at": "2026-08-21T09:00:00Z",
+    "booking_status": "confirmed",
+    "address": {
+      "line1": "59 3rd St",
+      "line2": "",
+      "city": "Lieberville",
+      "state": "NJ",
+      "postal_code": "19857"
+    },
+    "payment_intent_id": null
   }
 ]
