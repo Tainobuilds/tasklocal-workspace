@@ -11,5 +11,6 @@
   { "provider_id": "prov_010", "provider_name": "All-Star Cleaning", "provider_avg_rating": 6.2, "provider_review_count": 12 },
   { "provider_id": "prov_011", "provider_name": "Budget Movers", "provider_avg_rating": 4.5, "provider_review_count": 0 },
   { "provider_id": "prov_001", "provider_name": "Sparkle Clean Co. LLC", "provider_avg_rating": 3.1, "provider_review_count": 47 },
-  { "provider_id": "prov_012", "provider_name": "Speedy Handyman", "provider_avg_rating": "N/A", "provider_review_count": 4 }
+  { "provider_id": "prov_012", "provider_name": "Speedy Handyman", "provider_avg_rating": "N/A", "provider_review_count": 4 },
+  { "provider_id": "prov_013", "provider_name": "Rapid Response Repairs", "provider_avg_rating": 2.1, "provider_review_count": 38 }
 ]

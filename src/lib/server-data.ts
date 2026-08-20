@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { dedupeById, sanitizeBookings, sanitizeListings } from './sanitize';
+import { buildTriageData, type TriageData } from './trust-safety';
 import type { BookingsResult, ListingsResult } from './types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -103,6 +104,43 @@ export async function getCustomerBookings(customerId: string): Promise<BookingsR
           reason: `Bookings could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
+    };
+  }
+}
+
+/**
+ * Everything the trust & safety queue needs, validated in one pass.
+ * A failure here returns an empty queue with the cause quarantined, so the
+ * dashboard still renders and the team can see that something is wrong.
+ */
+export async function getTriageData(): Promise<TriageData> {
+  try {
+    const [rawReports, rawListings, rawProviders, rawBookings] = await Promise.all([
+      readJsonFile('reports.json'),
+      readJsonFile('listings.json'),
+      readJsonFile('providers.json'),
+      readJsonFile('bookings.json'),
+    ]);
+
+    const data = buildTriageData(rawReports, rawListings, rawProviders, rawBookings);
+
+    for (const item of data.quarantined) {
+      console.warn(`[tasklocal:triage] quarantined report ${item.id} — ${item.reason}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('[tasklocal] Failed to build triage data:', error);
+    return {
+      rows: [],
+      quarantined: [
+        {
+          id: '—',
+          reason: `Queue could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      ],
+      autoFlags: [],
+      metrics: { openCount: 0, avgResolutionDays: null, resolvedSampleSize: 0, flaggedListings: 0 },
     };
   }
 }

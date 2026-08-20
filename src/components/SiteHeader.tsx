@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MessageSquare, Search, Store } from 'lucide-react';
+import { MessageSquare, Search, ShieldCheck, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type SiteTab = 'provider' | 'chatbot' | 'customer';
@@ -60,6 +60,21 @@ export default function SiteHeader({ active, onSelect }: Props) {
             );
           })}
         </nav>
+
+        {/*
+          Staff entry point, kept outside the product switcher on purpose: the
+          trust & safety console is an internal tool, not a fourth app in the
+          customer-facing suite.
+        */}
+        <Link
+          href="/internal/trust-safety"
+          title="Internal trust & safety console"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors pl-4 border-l border-slate-800 shrink-0"
+        >
+          <ShieldCheck size={15} />
+          <span className="hidden lg:inline">Trust &amp; Safety</span>
+          <span className="hidden sm:inline lg:hidden">Staff</span>
+        </Link>
       </div>
     </header>
   );

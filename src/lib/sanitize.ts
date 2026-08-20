@@ -426,6 +426,7 @@ export function buildListingIndex(
       listing_id: id,
       title: coerceText(record['title']),
       service_type: coerceServiceType(record['service_type']),
+      description: coerceText(record['description']),
       price: coercePrice(record['price']),
       listing_status: status,
       withdrawn: status !== 'active',

@@ -91,6 +91,7 @@ export interface BookedListingRef {
   listing_id: string;
   title: string | null;
   service_type: ServiceType | null;
+  description: string | null;
   price: number | null;
   listing_status: string | null;
   /** True when the listing is no longer offered on the marketplace. */
