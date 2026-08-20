@@ -27,6 +27,11 @@ const matchIntentCategories = (searchTerm: string) =>
     .filter(([, synonyms]) => synonyms.some((syn) => searchTerm.includes(syn)))
     .map(([category]) => category);
 
+// Broad category terms trigger a Thumbtack-style guided intake question
+// instead of dumping unfiltered results straight away.
+const BROAD_CATEGORIES = Object.keys(INTENT_SYNONYMS);
+const JOB_TYPE_OPTIONS = ['Residential', 'Commercial', 'Emergency'];
+
 const SERVICE_FEE = 5;
 const CONFETTI_COLORS = ['#818cf8', '#34d399', '#fbbf24', '#f472b6', '#38bdf8'];
 
@@ -51,9 +56,17 @@ const getResponseTime = (item: any) => {
   return 5 + (seed % 5) * 5;
 };
 
+interface ChatMessage {
+  sender: 'user' | 'bot';
+  text: string;
+  matches?: any[];
+  intakeCategory?: string;
+  resolved?: boolean;
+}
+
 export default function MatchingChatbot({ listings }: Props) {
   const [query, setQuery] = useState('');
-  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; matches?: any[] }>>([
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { sender: 'bot', text: 'Hello! What service are you looking for today? Select a quick category below or type a query.' }
   ]);
 
@@ -63,14 +76,10 @@ export default function MatchingChatbot({ listings }: Props) {
   const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
   const [confettiPieces, setConfettiPieces] = useState<Array<{ id: number; left: number; color: string; delay: number; rotate: number }>>([]);
 
-  const executeSearch = (searchTerm: string) => {
-    if (!searchTerm.trim()) return;
-
-    const term = searchTerm.toLowerCase();
-    const isAll = term === 'all';
+  const runMatch = (term: string, isAll: boolean) => {
     const intentCategories = matchIntentCategories(term);
 
-    const matched = isAll
+    return isAll
       ? listings
       : listings.filter((item) => {
           const name = item.title || item.name || item.service_name || '';
@@ -85,6 +94,26 @@ export default function MatchingChatbot({ listings }: Props) {
             intentCategories.some((c) => catLower.includes(c))
           );
         });
+  };
+
+  const executeSearch = (searchTerm: string) => {
+    if (!searchTerm.trim()) return;
+
+    const term = searchTerm.toLowerCase().trim();
+    const isAll = term === 'all';
+
+    // Broad category query: ask a quick guided-intake question instead of
+    // dumping every listing in that category straight away.
+    if (!isAll && BROAD_CATEGORIES.includes(term)) {
+      setChatMessages((prev) => [
+        ...prev,
+        { sender: 'user', text: `Looking for: ${searchTerm}` },
+        { sender: 'bot', text: `Got it — ${term}. What type of job is this?`, intakeCategory: term }
+      ]);
+      return;
+    }
+
+    const matched = runMatch(term, isAll);
 
     setChatMessages((prev) => [
       ...prev,
@@ -94,6 +123,23 @@ export default function MatchingChatbot({ listings }: Props) {
         text: matched.length > 0
           ? `I found ${matched.length} matching service(s):`
           : `I couldn't find any listings matching "${searchTerm}".`,
+        matches: matched
+      }
+    ]);
+  };
+
+  const resolveIntake = (msgIndex: number, category: string, jobType: string) => {
+    const combinedTerm = `${category} ${jobType.toLowerCase()}`;
+    const matched = runMatch(combinedTerm, false);
+
+    setChatMessages((prev) => [
+      ...prev.map((m, idx) => (idx === msgIndex ? { ...m, resolved: true } : m)),
+      { sender: 'user', text: jobType },
+      {
+        sender: 'bot',
+        text: matched.length > 0
+          ? `Here are ${jobType.toLowerCase()} ${category} pros I found:`
+          : `I couldn't find any ${jobType.toLowerCase()} ${category} listings — here's what's available in ${category}:`,
         matches: matched
       }
     ]);
@@ -175,6 +221,24 @@ export default function MatchingChatbot({ listings }: Props) {
             >
               {msg.text}
             </div>
+
+            {msg.intakeCategory && !msg.resolved && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 flex flex-wrap gap-2">
+                {JOB_TYPE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => resolveIntake(i, msg.intakeCategory!, option)}
+                    className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 ${
+                      option === 'Emergency'
+                        ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 focus:ring-red-500'
+                        : 'bg-slate-800 border-slate-700/60 text-slate-300 hover:bg-indigo-600/30 hover:border-indigo-500/50 hover:text-white focus:ring-indigo-500'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {msg.matches && msg.matches.length > 0 && (
               <div className="mt-3 w-full space-y-2">

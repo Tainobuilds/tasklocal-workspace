@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Store, MessageSquare, X, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
 import ProviderDashboard from '@/components/ProviderDashboard';
 import MatchingChatbot from '@/components/MatchingChatbot';
@@ -66,6 +66,18 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [newServiceCount, setNewServiceCount] = useState(0);
+
+  const knownListingsCountRef = useRef(0);
+  const activeTabRef = useRef(activeTab);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    knownListingsCountRef.current = listings.length;
+  }, [listings]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -87,6 +99,32 @@ export default function Home() {
       await fetchListings();
       setIsInitialLoading(false);
     })();
+  }, []);
+
+  // Real-time event pulse: poll for listings created elsewhere (e.g. another
+  // provider) and surface them via a tab badge without disrupting the view.
+  useEffect(() => {
+    const pollForNewListings = async () => {
+      try {
+        const res = await fetch('/api/listings');
+        const data = await res.json();
+        const fresh = Array.isArray(data) ? data : [];
+        const delta = fresh.length - knownListingsCountRef.current;
+
+        if (delta > 0) {
+          setListings(fresh);
+          if (activeTabRef.current !== 'chatbot') {
+            setNewServiceCount((prev) => prev + delta);
+            showToast(`+${delta} New Service${delta > 1 ? 's' : ''} Available`);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const interval = setInterval(pollForNewListings, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleCreateListing = async (e: React.FormEvent) => {
@@ -163,12 +201,23 @@ export default function Home() {
               <Store size={16} /> Provider View
             </button>
             <button
-              onClick={() => setActiveTab('chatbot')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              onClick={() => {
+                setActiveTab('chatbot');
+                setNewServiceCount(0);
+              }}
+              className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === 'chatbot' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <MessageSquare size={16} /> AI Matcher
+              {newServiceCount > 0 && (
+                <span
+                  title={`+${newServiceCount} New Service${newServiceCount > 1 ? 's' : ''} Available`}
+                  className="glow-badge fade-in slide-in-from-top-2 absolute -top-2.5 -right-2.5 flex items-center gap-1 text-[10px] font-semibold bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full whitespace-nowrap"
+                >
+                  +{newServiceCount} New
+                </span>
+              )}
             </button>
           </nav>
         </div>
