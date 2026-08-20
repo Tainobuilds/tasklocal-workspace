@@ -1,10 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Store, MessageSquare, Search, CheckCircle } from 'lucide-react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Search, CheckCircle } from 'lucide-react';
+
+import SiteHeader from '@/components/SiteHeader';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>('provider');
+  // `useSearchParams` suspends during prerendering, so the page owns the boundary.
+  return (
+    <Suspense fallback={null}>
+      <HomeTabs />
+    </Suspense>
+  );
+}
+
+function HomeTabs() {
+  const searchParams = useSearchParams();
+  // Lets the shared header link straight to the chatbot from another route.
+  const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>(
+    searchParams.get('tab') === 'chatbot' ? 'chatbot' : 'provider',
+  );
   const [listings, setListings] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; matches?: any[] }>>([
@@ -14,7 +30,11 @@ export default function Home() {
   useEffect(() => {
     fetch('/api/listings')
       .then((res) => res.json())
-      .then((data) => setListings(Array.isArray(data) ? data : []));
+      .then((data) => setListings(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error('[tasklocal] Could not load listings:', error);
+        setListings([]);
+      });
   }, []);
 
   const handleChatSearch = (e: React.FormEvent) => {
@@ -43,33 +63,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white">TL</div>
-            <span className="font-semibold text-lg tracking-tight">TaskLocal Workspace</span>
-          </div>
-
-          <nav className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
-            <button
-              onClick={() => setActiveTab('provider')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'provider' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Store size={16} /> Provider App
-            </button>
-            <button
-              onClick={() => setActiveTab('chatbot')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'chatbot' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <MessageSquare size={16} /> Matching Chatbot
-            </button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader active={activeTab} onSelect={setActiveTab} />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {activeTab === 'provider' ? (
