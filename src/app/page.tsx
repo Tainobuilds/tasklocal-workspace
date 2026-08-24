@@ -2,10 +2,10 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Store, MessageSquare, X, Sparkles, CheckCircle, ClipboardList, Inbox, Search, ShieldCheck, LogIn } from 'lucide-react';
+import { X, CheckCircle, ClipboardList, Inbox } from 'lucide-react';
 import ProviderDashboard from '@/components/ProviderDashboard';
 import MatchingChatbot from '@/components/MatchingChatbot';
+import WorkspaceHeader from '@/components/WorkspaceHeader';
 
 function ProviderDashboardSkeleton() {
   return (
@@ -204,99 +204,17 @@ function HomeTabs() {
     }
   };
 
-  const activeServicesCount = listings.length;
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <header className="border-b border-slate-200 backdrop-blur-md bg-white/80 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center font-bold text-white">TL</div>
-            <span className="font-semibold text-lg tracking-tight text-slate-900">TaskLocal Workspace</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-2 text-xs">
-              <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-slate-500">Active Services</span>
-                <span className="font-semibold text-slate-900">{isInitialLoading ? '—' : activeServicesCount}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full text-teal-700">
-                <Sparkles size={12} />
-                <span>AI Match Rate</span>
-                <span className="font-semibold text-teal-800">98%</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsBookingsDrawerOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              📋 Activity & Bookings
-              {bookings.length > 0 && (
-                <span className="text-[10px] font-semibold bg-teal-600 text-white px-1.5 py-0.5 rounded-full leading-none">
-                  {bookings.length}
-                </span>
-              )}
-            </button>
-          </div>
-
-          <nav className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
-            <button
-              onClick={() => setActiveTab('provider')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === 'provider' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <Store size={16} /> Provider View
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('chatbot');
-                setNewServiceCount(0);
-              }}
-              className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === 'chatbot' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <MessageSquare size={16} /> AI Matcher
-              {newServiceCount > 0 && (
-                <span
-                  title={`+${newServiceCount} New Service${newServiceCount > 1 ? 's' : ''} Available`}
-                  className="glow-badge fade-in slide-in-from-top-2 absolute -top-2.5 -right-2.5 flex items-center gap-1 text-[10px] font-semibold bg-emerald-500 text-white px-2 py-0.5 rounded-full whitespace-nowrap"
-                >
-                  +{newServiceCount} New
-                </span>
-              )}
-            </button>
-          </nav>
-
-          {/*
-            Cross-links into the customer-facing app (kanubow's feature/customer-dashboard):
-            that suite has its own SiteHeader/dark theme, so these are plain links rather than
-            an imported shared header, to avoid mismatching this workspace's light theme.
-          */}
-          <div className="flex items-center gap-3 pl-3 border-l border-slate-200 shrink-0 text-xs">
-            <Link href="/browse" className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors">
-              <Search size={14} />
-              <span className="hidden sm:inline">Browse</span>
-            </Link>
-            <Link href="/login" className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors">
-              <LogIn size={14} />
-              <span className="hidden sm:inline">Sign in</span>
-            </Link>
-            <Link
-              href="/internal/trust-safety"
-              title="Internal trust & safety console"
-              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors"
-            >
-              <ShieldCheck size={14} />
-              <span className="hidden lg:inline">Trust &amp; Safety</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <WorkspaceHeader
+        active={activeTab}
+        onSelectWorkspaceTab={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'chatbot') setNewServiceCount(0);
+        }}
+        bookingsBadgeCount={bookings.length}
+        onOpenBookings={() => setIsBookingsDrawerOpen(true)}
+      />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div key={activeTab} className="tab-transition">
