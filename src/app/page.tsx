@@ -171,13 +171,15 @@ function HomeTabs() {
 
   // Owns the actual data mutation (optimistic update, POST, reconciliation,
   // toast) while ProviderDashboard owns the "Create New Listing" form/modal UI.
-  const createListing = async (formData: { title: string; category: string; price: string; description: string }) => {
+  const createListing = async (formData: { title: string; service_type: string; price: string; description: string }) => {
     const newEntry = {
-      id: `list-${Date.now()}`,
+      listing_id: `list-${Date.now()}`,
       title: formData.title,
-      category: formData.category || 'General',
+      service_type: formData.service_type,
+      price: Number(formData.price) || 0,
       price_per_hour: Number(formData.price) || 0,
-      description: formData.description || 'No description provided.'
+      description: formData.description || 'No description provided.',
+      listing_status: 'active'
     };
 
     // Optimistic update so both views react instantly, reconciled below.
@@ -197,7 +199,7 @@ function HomeTabs() {
       return true;
     } catch (err) {
       console.error(err);
-      setListings((prev) => prev.filter((item) => item.id !== newEntry.id));
+      setListings((prev) => prev.filter((item) => item.listing_id !== newEntry.listing_id));
       return false;
     }
   };

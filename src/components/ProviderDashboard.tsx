@@ -2,19 +2,20 @@
 
 import { useState } from 'react';
 import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge } from 'lucide-react';
+import { SERVICE_TYPES } from '@/lib/types';
 
 interface Props {
   listings: any[];
   bookings: any[];
-  onCreateListing: (formData: { title: string; category: string; price: string; description: string }) => Promise<boolean>;
+  onCreateListing: (formData: { title: string; service_type: string; price: string; description: string }) => Promise<boolean>;
 }
 
-const EMPTY_FORM = { title: '', category: '', price: '', description: '' };
+const EMPTY_FORM = { title: '', service_type: '', price: '', description: '' };
 
 const getListingStrength = (formData: typeof EMPTY_FORM) => {
   let score = 0;
   if (formData.title.trim()) score += 20;
-  if (formData.category.trim()) score += 20;
+  if (formData.service_type.trim()) score += 20;
   if (Number(formData.price) > 0) score += 20;
   if (formData.description.trim()) score += 15;
   if (formData.description.trim().length >= 40) score += 25;
@@ -193,13 +194,18 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g., Cleaning"
+                  <select
+                    value={formData.service_type}
+                    onChange={(e) => setFormData({ ...formData, service_type: e.target.value })}
                     className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
-                  />
+                  >
+                    <option value="">Select a category</option>
+                    {SERVICE_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type[0].toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Hourly Rate ($)</label>
