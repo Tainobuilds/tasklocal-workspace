@@ -1,40 +1,124 @@
 'use client';
 
-import { Plus, PackageSearch } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge } from 'lucide-react';
 
 interface Props {
   listings: any[];
-  onOpenModal: () => void;
+  bookings: any[];
+  onCreateListing: (formData: { title: string; category: string; price: string; description: string }) => Promise<boolean>;
 }
 
-export default function ProviderDashboard({ listings, onOpenModal }: Props) {
+const EMPTY_FORM = { title: '', category: '', price: '', description: '' };
+
+const getListingStrength = (formData: typeof EMPTY_FORM) => {
+  let score = 0;
+  if (formData.title.trim()) score += 20;
+  if (formData.category.trim()) score += 20;
+  if (Number(formData.price) > 0) score += 20;
+  if (formData.description.trim()) score += 15;
+  if (formData.description.trim().length >= 40) score += 25;
+
+  if (score >= 75) return { score, label: 'Excellent', barClass: 'bg-emerald-500', textClass: 'text-emerald-700' };
+  if (score >= 40) return { score, label: 'Good', barClass: 'bg-amber-500', textClass: 'text-amber-700' };
+  return { score, label: 'Weak', barClass: 'bg-red-400', textClass: 'text-red-600' };
+};
+
+export default function ProviderDashboard({ listings, bookings, onCreateListing }: Props) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSubmitError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const success = await onCreateListing(formData);
+
+    if (success) {
+      setFormData(EMPTY_FORM);
+      setIsModalOpen(false);
+    } else {
+      setSubmitError('Something went wrong saving this listing. Please try again.');
+    }
+    setIsSubmitting(false);
+  };
+
+  const activeServicesCount = listings.length;
+  const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
+  const averageHourlyRate = listings.length
+    ? listings.reduce((sum, item) => sum + (item.price_per_hour || item.price || item.rate || 0), 0) / listings.length
+    : 0;
+
+  const strength = getListingStrength(formData);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Provider Dashboard</h1>
-          <p className="text-slate-400 text-sm">Manage active local listings and services</p>
+          <h1 className="text-2xl font-bold text-slate-900">Provider Dashboard</h1>
+          <p className="text-slate-600 text-sm">Manage active local listings and services</p>
         </div>
         <button
-          onClick={onOpenModal}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <Plus size={16} /> New Listing
         </button>
       </div>
 
-      {listings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-20 px-6 border border-dashed border-slate-800 rounded-2xl bg-slate-900/40">
-          <div className="h-14 w-14 rounded-full bg-indigo-950/60 border border-indigo-800/40 flex items-center justify-center mb-4">
-            <PackageSearch size={24} className="text-indigo-400" />
+      {/* Dashboard Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+            <Layers size={18} className="text-teal-600" />
           </div>
-          <h3 className="text-slate-200 font-semibold mb-1">No service listings found yet!</h3>
-          <p className="text-sm text-slate-500 max-w-sm mb-5">
+          <div>
+            <p className="text-xs text-slate-500">Active Services</p>
+            <p className="text-xl font-bold text-slate-900">{activeServicesCount}</p>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+            <DollarSign size={18} className="text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500">Total Revenue</p>
+            <p className="text-xl font-bold text-slate-900">${totalRevenue.toFixed(2)}</p>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
+            <Gauge size={18} className="text-sky-600" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500">Average Hourly Rate</p>
+            <p className="text-xl font-bold text-slate-900">${averageHourlyRate.toFixed(2)}/hr</p>
+          </div>
+        </div>
+      </div>
+
+      {listings.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center py-20 px-6 border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+          <div className="h-14 w-14 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center mb-4">
+            <PackageSearch size={24} className="text-teal-600" />
+          </div>
+          <h3 className="text-slate-900 font-semibold mb-1">No service listings found yet!</h3>
+          <p className="text-sm text-slate-600 max-w-sm mb-5">
             Publish your first service to get discovered by the AI Matcher and start receiving bookings.
           </p>
           <button
-            onClick={onOpenModal}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <Plus size={16} /> Publish Your First Service
           </button>
@@ -50,19 +134,112 @@ export default function ProviderDashboard({ listings, onOpenModal }: Props) {
             return (
               <div
                 key={item.id || idx}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-lg hover:shadow-black/30"
+                className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">
-                  <h3 className="font-semibold text-lg text-slate-100 truncate">{title}</h3>
-                  <span className="font-bold text-emerald-400 shrink-0">${price}/hr</span>
+                  <h3 className="font-semibold text-lg text-slate-900 truncate">{title}</h3>
+                  <span className="font-bold text-emerald-600 shrink-0">${price}/hr</span>
                 </div>
-                <span className="inline-block text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full mb-2">
+                <span className="inline-block text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full mb-2">
                   {category}
                 </span>
-                <p className="text-slate-400 text-sm line-clamp-2">{description}</p>
+                <p className="text-slate-600 text-sm line-clamp-2">{description}</p>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Create New Listing Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
+            <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">Create New Listing</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Service Title</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g., Deep Apartment Cleaning"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Cleaning"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="45"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Briefly describe the service..."
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 resize-none"
+                />
+              </div>
+
+              {/* Listing Strength Meter */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-slate-600">Listing Strength</span>
+                  <span className={`text-xs font-semibold ${strength.textClass}`}>{strength.label}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ease-out ${strength.barClass}`}
+                    style={{ width: `${strength.score}%` }}
+                  />
+                </div>
+                {strength.score < 75 && (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    {!formData.description.trim()
+                      ? 'Add a description to strengthen your listing.'
+                      : 'Add more detail to your description to reach Excellent.'}
+                  </p>
+                )}
+              </div>
+
+              {submitError && <p className="text-xs text-red-600">{submitError}</p>}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Saving...
+                  </>
+                ) : (
+                  'Save & Add Listing'
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

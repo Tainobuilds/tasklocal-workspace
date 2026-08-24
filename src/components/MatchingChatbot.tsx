@@ -33,6 +33,36 @@ const matchIntentCategories = (searchTerm: string) =>
 const BROAD_CATEGORIES = Object.keys(INTENT_SYNONYMS);
 const JOB_TYPE_OPTIONS = ['Residential', 'Commercial', 'Emergency'];
 
+// Turns an unstructured request like "fix a leaking tap under my sink today"
+// into structured filters: Category / Urgency / Scope.
+const URGENCY_RULES: Array<{ label: string; keywords: string[] }> = [
+  { label: 'Emergency', keywords: ['emergency', 'urgent', 'urgently', 'asap', 'right away', 'immediately'] },
+  { label: 'Today', keywords: ['today', 'now', 'tonight', 'this morning', 'this afternoon'] },
+  { label: 'This Week', keywords: ['this week', 'few days', 'couple days', 'soon'] }
+];
+
+const SCOPE_RULES: Array<{ label: string; keywords: string[] }> = [
+  { label: 'Minor Repair', keywords: ['leak', 'leaking', 'fix', 'repair', 'small', 'minor', 'quick', 'patch', 'clog', 'clogged'] },
+  { label: 'Installation', keywords: ['install', 'installation', 'replace', 'replacement', 'set up', 'setup', 'new'] },
+  { label: 'Major Project', keywords: ['renovation', 'remodel', 'rebuild', 'overhaul', 'whole house'] }
+];
+
+const detectFromRules = (term: string, rules: Array<{ label: string; keywords: string[] }>) =>
+  rules.find((rule) => rule.keywords.some((kw) => term.includes(kw)))?.label ?? null;
+
+const capitalize = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+
+const parseStructuredIntent = (term: string) => {
+  const categories = matchIntentCategories(term);
+  return {
+    category: categories[0] ? capitalize(categories[0]) : null,
+    urgency: detectFromRules(term, URGENCY_RULES) ?? 'Flexible',
+    scope: detectFromRules(term, SCOPE_RULES) ?? 'General'
+  };
+};
+
+type StructuredIntent = ReturnType<typeof parseStructuredIntent>;
+
 const SERVICE_FEE = 5;
 const CONFETTI_COLORS = ['#818cf8', '#34d399', '#fbbf24', '#f472b6', '#38bdf8'];
 
@@ -83,6 +113,7 @@ interface ChatMessage {
   matches?: any[];
   intakeCategory?: string;
   resolved?: boolean;
+  structured?: StructuredIntent;
 }
 
 export default function MatchingChatbot({ listings, onBookingConfirmed }: Props) {
@@ -160,6 +191,13 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
 
     const matched = runMatch(term, isAll);
 
+    // Free-text requests carry more signal than a bare category — parse out
+    // Category / Urgency / Scope so the customer can see what we understood.
+    const structured = !isAll ? parseStructuredIntent(term) : undefined;
+    if (structured?.category && (structured.urgency === 'Today' || structured.urgency === 'Emergency')) {
+      setActiveFilters((prev) => ({ ...prev, availableToday: true }));
+    }
+
     setChatMessages((prev) => [
       ...prev,
       { sender: 'user', text: isAll ? 'Show all services' : `Looking for: ${searchTerm}` },
@@ -168,7 +206,8 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
         text: matched.length > 0
           ? `I found ${matched.length} matching service(s):`
           : `I couldn't find any listings matching "${searchTerm}".`,
-        matches: matched
+        matches: matched,
+        structured: structured?.category ? structured : undefined
       }
     ]);
   };
@@ -251,31 +290,31 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
   const bookingTitle = bookingListing?.title || bookingListing?.name || bookingListing?.service_name || 'Service';
 
   return (
-    <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col h-[600px]">
+    <div className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[600px]">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-sm">TaskLocal AI Match Assistant</span>
+          <span className="font-medium text-sm text-slate-900">TaskLocal AI Match Assistant</span>
         </div>
         <span className="text-xs text-slate-500 flex items-center gap-1">
-          <Sparkles size={12} className="text-indigo-400" /> Instant Search Active
+          <Sparkles size={12} className="text-teal-600" /> Instant Search Active
         </span>
       </div>
 
       {/* Smart Quick-Filters */}
       {hasAnyResults && (
-        <div className="px-4 py-2.5 border-b border-slate-800 bg-slate-950/40 flex items-center gap-2 flex-wrap">
+        <div className="px-4 py-2.5 border-b border-slate-200 bg-slate-50 flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide shrink-0">Filters</span>
           {QUICK_FILTERS.map((filter) => (
             <button
               key={filter.key}
               onClick={() => toggleFilter(filter.key)}
               aria-pressed={activeFilters[filter.key]}
-              className={`text-xs px-3 py-1 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 ${
                 activeFilters[filter.key]
-                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-900/40'
-                  : 'bg-slate-800 border-slate-700/60 text-slate-300 hover:bg-slate-700/60 hover:text-white'
+                  ? 'bg-teal-600 border-teal-600 text-white shadow-sm'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {filter.label}
@@ -284,7 +323,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
           {hasActiveFilters && (
             <button
               onClick={() => setActiveFilters({ availableToday: false, under60: false, topRated: false })}
-              className="text-[11px] text-slate-500 hover:text-slate-300 underline ml-auto focus:outline-none"
+              className="text-[11px] text-slate-500 hover:text-slate-700 underline ml-auto focus:outline-none"
             >
               Clear filters
             </button>
@@ -299,12 +338,31 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
             <div
               className={`max-w-[80%] p-3.5 rounded-2xl text-sm ${
                 msg.sender === 'user'
-                  ? 'bg-indigo-600 text-white rounded-br-none'
-                  : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50'
+                  ? 'bg-teal-600 text-white rounded-br-none'
+                  : 'bg-slate-100 text-slate-700 rounded-bl-none border border-slate-200'
               }`}
             >
               {msg.text}
             </div>
+
+            {msg.structured && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 mt-2 w-full bg-teal-50/60 border border-teal-100 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-teal-700 uppercase tracking-wide mb-1.5">
+                  <Sparkles size={11} /> Parsed Intent
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[11px] font-medium text-teal-700 bg-white border border-teal-200 px-2 py-0.5 rounded-full">
+                    Category: {msg.structured.category}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                    Urgency: {msg.structured.urgency}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                    Scope: {msg.structured.scope}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {msg.intakeCategory && !msg.resolved && (
               <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 flex flex-wrap gap-2">
@@ -314,8 +372,8 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                     onClick={() => resolveIntake(i, msg.intakeCategory!, option)}
                     className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 ${
                       option === 'Emergency'
-                        ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 focus:ring-red-500'
-                        : 'bg-slate-800 border-slate-700/60 text-slate-300 hover:bg-indigo-600/30 hover:border-indigo-500/50 hover:text-white focus:ring-indigo-500'
+                        ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 focus:ring-red-500'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 focus:ring-teal-500'
                     }`}
                   >
                     {option}
@@ -329,11 +387,11 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
 
               if (filteredMatches.length === 0) {
                 return (
-                  <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-950 border border-dashed border-slate-800 rounded-xl p-5">
-                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center mb-2">
+                  <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl p-5">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-2">
                       <SearchX size={18} className="text-slate-500" />
                     </div>
-                    <p className="text-sm text-slate-300 font-medium">No pros match your filters</p>
+                    <p className="text-sm text-slate-900 font-medium">No pros match your filters</p>
                     <p className="text-xs text-slate-500 mt-1 max-w-xs">Try loosening or clearing a filter above.</p>
                   </div>
                 );
@@ -351,22 +409,22 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                       <div
                         key={matchIdx}
                         style={{ animationDelay: `${matchIdx * 60}ms` }}
-                        className="animate-in fade-in slide-in-from-bottom-2 bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-lg hover:shadow-black/30"
+                        className="animate-in fade-in slide-in-from-bottom-2 bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
-                            <span className="font-semibold text-[15px] text-slate-100 truncate">{title}</span>
-                            <span className="font-bold text-emerald-400 text-sm shrink-0">${price}/hr</span>
+                            <span className="font-semibold text-[15px] text-slate-900 truncate">{title}</span>
+                            <span className="font-bold text-emerald-600 text-sm shrink-0">${price}/hr</span>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                            <span className="text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
                               {item.category || 'General'}
                             </span>
-                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-slate-400 bg-slate-800/80 border border-slate-700/50 px-2 py-0.5 rounded-full">
+                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
                               <Star size={10} className="fill-amber-400 text-amber-400" /> {rating}
                             </span>
                             {verified && (
-                              <span className="flex items-center gap-0.5 text-[11px] font-medium text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                              <span className="flex items-center gap-0.5 text-[11px] font-medium text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">
                                 <BadgeCheck size={10} /> Verified Pro
                               </span>
                             )}
@@ -377,7 +435,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                         </div>
                         <button
                           onClick={() => openBookingModal(item)}
-                          className="shrink-0 self-center flex items-center gap-1 text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-emerald-600/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="shrink-0 self-center flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-emerald-100 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           <CheckCircle size={12} /> Book
                         </button>
@@ -389,11 +447,11 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
             })()}
 
             {msg.matches && msg.matches.length === 0 && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-950 border border-dashed border-slate-800 rounded-xl p-5">
-                <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center mb-2">
+              <div className="animate-in fade-in slide-in-from-bottom-2 mt-3 w-full flex flex-col items-center text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl p-5">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-2">
                   <SearchX size={18} className="text-slate-500" />
                 </div>
-                <p className="text-sm text-slate-300 font-medium">No service listings found yet!</p>
+                <p className="text-sm text-slate-900 font-medium">No service listings found yet!</p>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs">
                   Head to the Provider Dashboard tab to publish your first service, or try a different search term.
                 </p>
@@ -404,13 +462,13 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       </div>
 
       {/* Quick Category Suggestion Buttons */}
-      <div className="px-3 py-2 bg-slate-950/50 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar">
         <span className="text-xs text-slate-500 whitespace-nowrap pl-1">Quick search:</span>
         {CATEGORY_SUGGESTIONS.map((cat) => (
           <button
             key={cat.value}
             onClick={() => executeSearch(cat.value)}
-            className="text-xs bg-slate-800 hover:bg-indigo-600/30 hover:border-indigo-500/50 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            className="text-xs bg-white hover:bg-teal-50 hover:border-teal-300 text-slate-600 hover:text-teal-700 border border-slate-200 px-3 py-1 rounded-full whitespace-nowrap transition-all"
           >
             {cat.label}
           </button>
@@ -418,23 +476,23 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleFormSubmit} className="p-3 border-t border-slate-800 flex gap-2 bg-slate-900">
+      <form onSubmit={handleFormSubmit} className="p-3 border-t border-slate-200 flex gap-2 bg-white">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Type a service or requirement..."
-          className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
         />
-        <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-teal-500">
           <Search size={18} />
         </button>
       </form>
 
       {/* Booking Modal */}
       {bookingListing && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="relative overflow-hidden bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="relative overflow-hidden bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 shadow-xl">
             {confettiPieces.map((piece) => (
               <span
                 key={piece.id}
@@ -448,28 +506,28 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
               />
             ))}
 
-            <button onClick={closeBookingModal} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+            <button onClick={closeBookingModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">
               <X size={18} />
             </button>
 
             {bookingStatus === 'form' ? (
               <>
-                <h2 className="text-lg font-bold text-slate-100 mb-1">Confirm Booking</h2>
-                <p className="text-sm text-slate-400 mb-4">{bookingTitle}</p>
+                <h2 className="text-lg font-bold text-slate-900 mb-1">Confirm Booking</h2>
+                <p className="text-sm text-slate-600 mb-4">{bookingTitle}</p>
 
-                <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 mb-4">
-                  <span className="text-sm text-slate-300">Estimated hours</span>
+                <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-4">
+                  <span className="text-sm text-slate-700">Estimated hours</span>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setBookingHours((h) => Math.max(1, h - 1))}
-                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
                       −
                     </button>
-                    <span className="text-sm font-semibold w-4 text-center">{bookingHours}</span>
+                    <span className="text-sm font-semibold w-4 text-center text-slate-900">{bookingHours}</span>
                     <button
                       onClick={() => setBookingHours((h) => Math.min(8, h + 1))}
-                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
                       +
                     </button>
@@ -477,15 +535,15 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                 </div>
 
                 <div className="space-y-1.5 text-sm mb-5">
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-slate-600">
                     <span>{bookingHours} hr × ${hourlyRate}/hr</span>
                     <span>${bookingSubtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-slate-600">
                     <span>Service fee</span>
                     <span>${SERVICE_FEE.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-100 font-semibold pt-1.5 border-t border-slate-800">
+                  <div className="flex justify-between text-slate-900 font-semibold pt-1.5 border-t border-slate-200">
                     <span>Total</span>
                     <span>${bookingTotal.toFixed(2)}</span>
                   </div>
@@ -494,7 +552,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                 <button
                   onClick={confirmBooking}
                   disabled={isBookingSubmitting}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   {isBookingSubmitting ? (
                     <>
@@ -507,11 +565,11 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
               </>
             ) : (
               <div className="flex flex-col items-center text-center py-4">
-                <div className="checkmark-pop h-14 w-14 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center mb-4">
-                  <CheckCircle size={28} className="text-emerald-400" />
+                <div className="checkmark-pop h-14 w-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-4">
+                  <CheckCircle size={28} className="text-emerald-600" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-100 mb-1">Booking Confirmed!</h2>
-                <p className="text-sm text-slate-400">
+                <h2 className="text-lg font-bold text-slate-900 mb-1">Booking Confirmed!</h2>
+                <p className="text-sm text-slate-600">
                   {bookingTitle} is on its way. Total: ${bookingTotal.toFixed(2)}
                 </p>
               </div>
