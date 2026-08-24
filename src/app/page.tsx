@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Store, MessageSquare, X, Sparkles, CheckCircle, ClipboardList, Inbox } from 'lucide-react';
+import { Suspense, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { Store, MessageSquare, X, Sparkles, CheckCircle, ClipboardList, Inbox, Search, ShieldCheck, LogIn } from 'lucide-react';
 import ProviderDashboard from '@/components/ProviderDashboard';
 import MatchingChatbot from '@/components/MatchingChatbot';
 
@@ -58,7 +60,20 @@ function MatchingChatbotSkeleton() {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>('provider');
+  // `useSearchParams` suspends during prerendering, so the page owns the boundary.
+  return (
+    <Suspense fallback={null}>
+      <HomeTabs />
+    </Suspense>
+  );
+}
+
+function HomeTabs() {
+  const searchParams = useSearchParams();
+  // Lets links from other pages (e.g. /internal/trust-safety) deep-link into the chatbot tab.
+  const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>(
+    searchParams.get('tab') === 'chatbot' ? 'chatbot' : 'provider',
+  );
   const [listings, setListings] = useState<any[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -192,7 +207,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <header className="border-b border-slate-200 backdrop-blur-md bg-white/80 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2 shrink-0">
             <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center font-bold text-white">TL</div>
             <span className="font-semibold text-lg tracking-tight text-slate-900">TaskLocal Workspace</span>
@@ -254,6 +269,30 @@ export default function Home() {
               )}
             </button>
           </nav>
+
+          {/*
+            Cross-links into the customer-facing app (kanubow's feature/customer-dashboard):
+            that suite has its own SiteHeader/dark theme, so these are plain links rather than
+            an imported shared header, to avoid mismatching this workspace's light theme.
+          */}
+          <div className="flex items-center gap-3 pl-3 border-l border-slate-200 shrink-0 text-xs">
+            <Link href="/browse" className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors">
+              <Search size={14} />
+              <span className="hidden sm:inline">Browse</span>
+            </Link>
+            <Link href="/login" className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors">
+              <LogIn size={14} />
+              <span className="hidden sm:inline">Sign in</span>
+            </Link>
+            <Link
+              href="/internal/trust-safety"
+              title="Internal trust & safety console"
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <ShieldCheck size={14} />
+              <span className="hidden lg:inline">Trust &amp; Safety</span>
+            </Link>
+          </div>
         </div>
       </header>
 
