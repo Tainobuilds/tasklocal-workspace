@@ -13,7 +13,6 @@
 import {
   BOOKING_STATUSES,
   SERVICE_TYPES,
-  type Address,
   type AvailabilitySlot,
   type BookedListingRef,
   type BookingStatus,
@@ -24,6 +23,7 @@ import {
   type DataIssue,
   type ListingsResult,
   type Period,
+  type ProviderRatingRollup,
   type ServiceType,
   type Weekday,
 } from './types';
@@ -187,8 +187,17 @@ export function dedupeById<T extends Record<string, unknown>>(
   return { unique: [...byId.values()].map((entry) => entry.record), duplicates };
 }
 
-/** Validates the provider file and indexes it by id for joining onto listings. */
-export function sanitizeProviders(raw: unknown): {
+/**
+ * Validates the provider file and indexes it by id for joining onto listings.
+ *
+ * Ratings come from `derivedRatings` — rolled up from real review records —
+ * rather than the stored `provider_avg_rating` field, so the number shown to
+ * customers always matches the reviews behind it.
+ */
+export function sanitizeProviders(
+  raw: unknown,
+  derivedRatings?: Map<string, ProviderRatingRollup>,
+): {
   providers: Map<string, CleanProvider>;
   issues: DataIssue[];
 } {
@@ -230,21 +239,32 @@ export function sanitizeProviders(raw: unknown): {
 
   for (const record of unique) {
     const id = String(record['provider_id']);
-    const rating = coerceRating(record['provider_avg_rating']);
-    const count = coerceReviewCount(record['provider_review_count']);
+    const rollup = derivedRatings?.get(id) ?? null;
 
-    if (record['provider_avg_rating'] != null && rating === null) {
+    // Once derived ratings are supplied they are the only source. A provider
+    // with no reviews reports nothing rather than falling back to the stored
+    // field — otherwise a stale or corrupt stored value (a 6.2, an "N/A", or a
+    // number no review supports) would reach the UI and the auto-flag logic.
+    const rating = derivedRatings
+      ? rollup?.averageRating ?? null
+      : coerceRating(record['provider_avg_rating']);
+    const count = derivedRatings
+      ? rollup?.ratedCount ?? 0
+      : coerceReviewCount(record['provider_review_count']);
+
+    if (derivedRatings && !rollup) {
       issues.push({
         scope: 'provider',
         id,
         severity: 'repaired',
-        reason: `provider_avg_rating ${JSON.stringify(record['provider_avg_rating'])} is not a number within 1-5; rating hidden.`,
+        reason: 'No reviews with a usable rating; provider rating shown as insufficient data.',
       });
     }
 
     providers.set(id, {
       provider_id: id,
       provider_name: coerceText(record['provider_name']),
+      provider_bio: coerceText(record['provider_bio']),
       // A rating with zero ratings behind it is not a rating anyone can trust.
       provider_avg_rating: count === 0 ? null : rating,
       provider_review_count: count,
@@ -261,8 +281,12 @@ export function sanitizeProviders(raw: unknown): {
  * service_type, no id) and repaired when a non-essential field is bad.
  * Only `listing_status === "active"` listings are ever returned.
  */
-export function sanitizeListings(rawListings: unknown, rawProviders: unknown): ListingsResult {
-  const { providers, issues } = sanitizeProviders(rawProviders);
+export function sanitizeListings(
+  rawListings: unknown,
+  rawProviders: unknown,
+  derivedRatings?: Map<string, ProviderRatingRollup>,
+): ListingsResult {
+  const { providers, issues } = sanitizeProviders(rawProviders, derivedRatings);
 
   if (!Array.isArray(rawListings)) {
     issues.push({
@@ -405,11 +429,12 @@ export function sanitizeListings(rawListings: unknown, rawProviders: unknown): L
 export function buildListingIndex(
   rawListings: unknown,
   rawProviders: unknown,
+  derivedRatings?: Map<string, ProviderRatingRollup>,
 ): Map<string, BookedListingRef> {
   const index = new Map<string, BookedListingRef>();
   if (!Array.isArray(rawListings)) return index;
 
-  const { providers } = sanitizeProviders(rawProviders);
+  const { providers } = sanitizeProviders(rawProviders, derivedRatings);
 
   const withIds = rawListings.filter(
     (record): record is Record<string, unknown> =>
@@ -437,19 +462,24 @@ export function buildListingIndex(
   return index;
 }
 
-function coerceAddress(raw: unknown): Address | null {
+/**
+ * Addresses are a single free-text field now, but older bookings stored a
+ * structured object. Both are accepted and normalised to one display string.
+ */
+function coerceAddress(raw: unknown): string | null {
+  if (typeof raw === 'string') return coerceText(raw);
   if (!raw || typeof raw !== 'object') return null;
+
   const record = raw as Record<string, unknown>;
   const line1 = coerceText(record['line1']);
   if (!line1) return null;
 
-  return {
-    line1,
-    line2: coerceText(record['line2']) ?? '',
-    city: coerceText(record['city']) ?? '',
-    state: coerceText(record['state']) ?? '',
-    postal_code: coerceText(record['postal_code']) ?? '',
-  };
+  const region = [coerceText(record['city']), coerceText(record['state'])]
+    .filter(Boolean)
+    .join(', ');
+  return [line1, coerceText(record['line2']), [region, coerceText(record['postal_code'])].filter(Boolean).join(' ')]
+    .filter((part) => part && part.trim().length > 0)
+    .join('\n');
 }
 
 /** Accepts only a timestamp that actually parses; `"not scheduled yet"` does not. */
@@ -471,6 +501,7 @@ export function sanitizeBookings(
   rawBookings: unknown,
   rawListings: unknown,
   rawProviders: unknown,
+  derivedRatings?: Map<string, ProviderRatingRollup>,
 ): BookingsResult {
   const issues: DataIssue[] = [];
 
@@ -484,7 +515,7 @@ export function sanitizeBookings(
     return { bookings: [], issues };
   }
 
-  const listingIndex = buildListingIndex(rawListings, rawProviders);
+  const listingIndex = buildListingIndex(rawListings, rawProviders, derivedRatings);
 
   const withIds: Record<string, unknown>[] = [];
   rawBookings.forEach((record, index) => {

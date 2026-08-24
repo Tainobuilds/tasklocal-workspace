@@ -32,9 +32,22 @@ export interface CleanListing {
   provider: CleanProvider | null;
 }
 
+/**
+ * A provider's rating derived from actual review records.
+ * This is the source of truth for ratings — the stored `provider_avg_rating`
+ * field is not read, so a corrupt stored value cannot reach the UI.
+ */
+export interface ProviderRatingRollup {
+  averageRating: number | null;
+  /** Reviews that contributed a valid 1-5 rating. */
+  ratedCount: number;
+}
+
 export interface CleanProvider {
   provider_id: string;
   provider_name: string | null;
+  /** Short self-description shown on the listing detail page. */
+  provider_bio: string | null;
   /** `null` unless it is a number within 1-5. */
   provider_avg_rating: number | null;
   /** `null` unless it is a non-negative integer. */
@@ -107,7 +120,8 @@ export interface CleanBooking {
   status: BookingStatus | 'unknown';
   /** The original status string, kept so an unrecognised value can be shown. */
   rawStatus: string | null;
-  address: Address | null;
+  /** Free-text service address; legacy structured addresses are flattened. */
+  address: string | null;
   /** `null` when the booking references a listing that no longer exists. */
   listing: BookedListingRef | null;
   listingId: string | null;

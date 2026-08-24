@@ -110,7 +110,7 @@
     "listing_id": "list_103",
     "customer_id": "cust_00042",
     "scheduled_at": "2026-08-21T09:00:00Z",
-    "booking_status": "confirmed",
+    "booking_status": "completed",
     "address": {
       "line1": "59 3rd St",
       "line2": "",
@@ -118,6 +118,45 @@
       "state": "NJ",
       "postal_code": "19857"
     },
+    "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_615",
+    "listing_id": "list_104",
+    "customer_id": "cust_00042",
+    "scheduled_at": "2026-09-04T14:00:00Z",
+    "booking_status": "confirmed",
+    "address": {
+      "line1": "s",
+      "line2": "",
+      "city": "s",
+      "state": "s",
+      "postal_code": "x"
+    },
+    "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_616",
+    "listing_id": "list_104",
+    "customer_id": "cust_00042",
+    "scheduled_at": "2026-09-04T14:00:00Z",
+    "booking_status": "confirmed",
+    "address": {
+      "line1": "a",
+      "line2": "",
+      "city": "s",
+      "state": "g",
+      "postal_code": "f"
+    },
+    "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_617",
+    "listing_id": "list_103",
+    "customer_id": "cust_00025",
+    "scheduled_at": "2026-08-24T14:00:00Z",
+    "booking_status": "confirmed",
+    "address": "9 Kingsbridge Ter, Bronx, NY 10463",
     "payment_intent_id": null
   }
 ]

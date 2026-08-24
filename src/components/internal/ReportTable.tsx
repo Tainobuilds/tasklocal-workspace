@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarX2, Copy, FileWarning } from 'lucide-react';
+import { CalendarX2, Copy, FileWarning, TriangleAlert } from 'lucide-react';
 
 import ProviderRiskBadge from './ProviderRiskBadge';
 import { SEVERITY_STYLES, SeverityChip } from './severity';
@@ -126,6 +126,15 @@ export default function ReportTable({ rows, selectedId, onSelect }: Props) {
                       Merged with {row.mergedIds.join(', ')}
                     </p>
                   )}
+
+                  {/* Cross-record problems belong in the row, not only the panel —
+                      a reviewer triaging the queue needs to see them at a glance. */}
+                  {row.dataFlags.map((flag) => (
+                    <p key={flag} className="flex items-start gap-1 text-xs text-amber-400/90 mt-1">
+                      <TriangleAlert size={12} className="shrink-0 mt-0.5" aria-hidden />
+                      {flag}
+                    </p>
+                  ))}
                 </td>
 
                 <td className="px-4 py-3 align-top">

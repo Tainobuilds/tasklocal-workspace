@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { MessageSquare, Search, ShieldCheck, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import AccountMenu from './AccountMenu';
+
 export type SiteTab = 'provider' | 'chatbot' | 'customer';
 
 const TABS: Array<{ id: SiteTab; label: string; icon: LucideIcon; href: string }> = [
@@ -66,15 +68,17 @@ export default function SiteHeader({ active, onSelect }: Props) {
           trust & safety console is an internal tool, not a fourth app in the
           customer-facing suite.
         */}
-        <Link
-          href="/internal/trust-safety"
-          title="Internal trust & safety console"
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors pl-4 border-l border-slate-800 shrink-0"
-        >
-          <ShieldCheck size={15} />
-          <span className="hidden lg:inline">Trust &amp; Safety</span>
-          <span className="hidden sm:inline lg:hidden">Staff</span>
-        </Link>
+        <div className="flex items-center gap-3 pl-3 border-l border-slate-800 shrink-0">
+          <AccountMenu />
+          <Link
+            href="/internal/trust-safety"
+            title="Internal trust & safety console"
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <ShieldCheck size={15} />
+            <span className="hidden lg:inline">Trust &amp; Safety</span>
+          </Link>
+        </div>
       </div>
     </header>
   );

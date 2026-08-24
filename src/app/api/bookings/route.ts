@@ -1,23 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { DEMO_CUSTOMER_ID } from '@/lib/demo-session';
-import { PERIOD_HOURS, slotKey } from '@/lib/sanitize';
-import { getCatalogue, readJsonFile, writeJsonFile } from '@/lib/server-data';
-import { WEEKDAYS, type Period, type Weekday } from '@/lib/types';
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-/**
- * Resolves a `YYYY-MM-DD` string to its weekday.
- * Parsed at UTC noon so the weekday cannot slide across a timezone boundary.
- */
-function weekdayFor(date: string): Weekday | null {
-  if (!DATE_PATTERN.test(date)) return null;
-  const parsed = new Date(`${date}T12:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  // `getUTCDay()` is 0-indexed from Sunday; WEEKDAYS starts at Monday.
-  return WEEKDAYS[(parsed.getUTCDay() + 6) % 7];
-}
+import { guardSlot } from '@/lib/booking-guard';
+import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { getSessionCustomerId } from '@/lib/session';
 
 function nextBookingId(existing: unknown): string {
   const count = Array.isArray(existing) ? existing.length : 0;
@@ -30,63 +15,46 @@ export async function GET() {
 }
 
 /**
- * Creates a booking after re-validating everything server-side: the listing
- * must still be active and valid, and the requested slot must genuinely appear
- * in that listing's availability.
+ * Creates a booking for the signed-in customer.
+ *
+ * The slot is re-validated here even though the client already ran the
+ * pre-payment check, because the provider's calendar can change in between.
  */
 export async function POST(request: Request) {
   try {
+    // Attribution comes from the session cookie, never the request body, so a
+    // booking cannot be filed against another customer.
+    const customerId = await getSessionCustomerId();
+    if (!customerId) {
+      return NextResponse.json({ error: 'You must be signed in to book.' }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== 'object') {
       return NextResponse.json({ error: 'A JSON body is required.' }, { status: 400 });
     }
 
-    const { listing_id: listingId, date, period, address, payment_intent_id: paymentIntentId } = body;
-
-    if (typeof listingId !== 'string' || typeof date !== 'string') {
-      return NextResponse.json({ error: 'listing_id and date are required.' }, { status: 400 });
-    }
-    if (period !== 'AM' && period !== 'PM') {
-      return NextResponse.json({ error: 'period must be "AM" or "PM".' }, { status: 400 });
-    }
-    if (!address || typeof address !== 'object' || typeof address.line1 !== 'string' || !address.line1.trim()) {
+    const address = typeof body.address === 'string' ? body.address.trim() : '';
+    if (!address) {
       return NextResponse.json({ error: 'A service address is required.' }, { status: 400 });
     }
 
-    const { listings } = await getCatalogue();
-    const listing = listings.find((item) => item.listing_id === listingId);
-    if (!listing) {
-      return NextResponse.json({ error: 'That listing is no longer available.' }, { status: 404 });
+    const guard = await guardSlot(body.listing_id, body.date, body.period);
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status });
     }
 
-    const weekday = weekdayFor(date);
-    if (!weekday) {
-      return NextResponse.json({ error: 'date must be a valid YYYY-MM-DD value.' }, { status: 400 });
-    }
-
-    // The client already restricts the calendar, but a slot outside the
-    // listing's availability must never be accepted on trust.
-    const requested = slotKey({ day: weekday, period: period as Period });
-    const offered = listing.availability.some((slot) => slotKey(slot) === requested);
-    if (!offered) {
-      return NextResponse.json(
-        { error: `This provider is not available on ${requested}.` },
-        { status: 409 },
-      );
-    }
-
-    const scheduledAt = `${date}T${String(PERIOD_HOURS[period as Period]).padStart(2, '0')}:00:00Z`;
     const existing = await readJsonFile('bookings.json');
     const bookings = Array.isArray(existing) ? existing : [];
 
     const booking = {
       booking_id: nextBookingId(bookings),
-      listing_id: listing.listing_id,
-      customer_id: DEMO_CUSTOMER_ID,
-      scheduled_at: scheduledAt,
+      listing_id: guard.listing.listing_id,
+      customer_id: customerId,
+      scheduled_at: guard.scheduledAt,
       booking_status: 'confirmed',
       address,
-      payment_intent_id: typeof paymentIntentId === 'string' ? paymentIntentId : null,
+      payment_intent_id: typeof body.payment_intent_id === 'string' ? body.payment_intent_id : null,
     };
 
     bookings.push(booking);

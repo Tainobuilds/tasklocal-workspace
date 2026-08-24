@@ -14,9 +14,12 @@ const NO_FILTERS: Filters = { serviceTypes: [], minPrice: null, maxPrice: null, 
 
 interface Props {
   listings: CleanListing[];
+  /** Saved address for the signed-in customer, pre-filled at confirmation. */
+  defaultAddress: string | null;
+  signedIn: boolean;
 }
 
-export default function CustomerApp({ listings }: Props) {
+export default function CustomerApp({ listings, defaultAddress, signedIn }: Props) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [booking, setBooking] = useState<CleanListing | null>(null);
 
@@ -144,7 +147,14 @@ export default function CustomerApp({ listings }: Props) {
         </div>
       )}
 
-      {booking && <BookingFlow listing={booking} onClose={() => setBooking(null)} />}
+      {booking && (
+        <BookingFlow
+          listing={booking}
+          defaultAddress={defaultAddress}
+          signedIn={signedIn}
+          onClose={() => setBooking(null)}
+        />
+      )}
     </div>
   );
 }

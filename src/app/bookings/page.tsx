@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { CalendarX } from 'lucide-react';
 
 import BookingCard from '@/components/customer/BookingCard';
 import CustomerNav from '@/components/customer/CustomerNav';
-import CustomerSwitcher from '@/components/customer/CustomerSwitcher';
 import SiteHeader from '@/components/SiteHeader';
-import { DEMO_CUSTOMER_ID } from '@/lib/demo-session';
-import { getCustomerBookings, getCustomers, type CustomerSummary } from '@/lib/server-data';
+import { sanitizeReviews } from '@/lib/reviews';
+import { getCustomerBookings, getSessionCustomer, readJsonFile } from '@/lib/server-data';
 import type { CleanBooking } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -15,13 +15,14 @@ export const metadata: Metadata = {
   description: 'Review the services you have booked on TaskLocal.',
 };
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Splits history into what still needs the customer's attention, what is
  * coming up, and what is done. Undated bookings surface first rather than
  * being silently sorted into the past.
  */
-function groupBookings(bookings: CleanBooking[]) {
-  const now = new Date().toISOString();
+function groupBookings(bookings: CleanBooking[], nowIso: string) {
   const needsAttention: CleanBooking[] = [];
   const upcoming: CleanBooking[] = [];
   const past: CleanBooking[] = [];
@@ -31,7 +32,7 @@ function groupBookings(bookings: CleanBooking[]) {
       past.push(booking);
     } else if (booking.scheduledAt === null) {
       needsAttention.push(booking);
-    } else if (booking.scheduledAt < now) {
+    } else if (booking.scheduledAt < nowIso) {
       past.push(booking);
     } else {
       upcoming.push(booking);
@@ -41,24 +42,27 @@ function groupBookings(bookings: CleanBooking[]) {
   return { needsAttention, upcoming, past };
 }
 
-export default async function BookingsPage({ searchParams }: PageProps<'/bookings'>) {
-  const params = await searchParams;
-  const requested = params.customer;
-  const customerId =
-    typeof requested === 'string' && requested.trim().length > 0 ? requested.trim() : DEMO_CUSTOMER_ID;
+export default async function BookingsPage() {
+  const customer = await getSessionCustomer();
+  // Booking history is per-account, so there is nothing to show without a session.
+  if (!customer) redirect('/login?next=/bookings');
 
-  // `getCustomerBookings` still validates and logs every bad record server-side.
-  const [{ bookings }, customers] = await Promise.all([
-    getCustomerBookings(customerId),
-    getCustomers(),
+  const [{ bookings }, rawReviews] = await Promise.all([
+    getCustomerBookings(customer.customer_id),
+    readJsonFile('reviews.json'),
   ]);
 
-  // Keep the switcher honest if the URL names someone outside the customer file.
-  const options: CustomerSummary[] = customers.some((c) => c.customer_id === customerId)
-    ? customers
-    : [{ customer_id: customerId, customer_name: null }, ...customers];
+  const reviews = sanitizeReviews(rawReviews);
+  const reviewedBookingIds = new Set(
+    reviews
+      .filter((review) => review.customer_id === customer.customer_id && review.booking_id)
+      .map((review) => review.booking_id as string),
+  );
 
-  const { needsAttention, upcoming, past } = groupBookings(bookings);
+  // "Is it past?" is decided here so the action buttons cannot differ between
+  // the server render and hydration.
+  const nowIso = new Date().toISOString();
+  const { needsAttention, upcoming, past } = groupBookings(bookings, nowIso);
 
   const sections = [
     { key: 'attention', title: 'Needs attention', items: needsAttention },
@@ -73,16 +77,15 @@ export default async function BookingsPage({ searchParams }: PageProps<'/booking
       <main className="max-w-6xl mx-auto px-6 py-8">
         <CustomerNav active="bookings" />
 
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">My bookings</h1>
-            <p className="text-slate-400 text-sm">
-              {bookings.length === 0
-                ? 'Services you book will appear here.'
-                : `${bookings.length} ${bookings.length === 1 ? 'booking' : 'bookings'} on this account.`}
-            </p>
-          </div>
-          <CustomerSwitcher customers={options} current={customerId} />
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">My bookings</h1>
+          <p className="text-slate-400 text-sm">
+            {bookings.length === 0
+              ? 'Services you book will appear here.'
+              : `${bookings.length} ${bookings.length === 1 ? 'booking' : 'bookings'} for ${
+                  customer.customer_name ?? customer.customer_id
+                }.`}
+          </p>
         </div>
 
         {bookings.length === 0 ? (
@@ -109,7 +112,12 @@ export default async function BookingsPage({ searchParams }: PageProps<'/booking
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {section.items.map((booking) => (
-                    <BookingCard key={booking.booking_id} booking={booking} />
+                    <BookingCard
+                      key={booking.booking_id}
+                      booking={booking}
+                      isPast={booking.scheduledAt !== null && booking.scheduledAt < nowIso}
+                      hasReview={reviewedBookingIds.has(booking.booking_id)}
+                    />
                   ))}
                 </div>
               </section>

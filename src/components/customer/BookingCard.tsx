@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { AlertTriangle, CalendarClock, MapPin } from 'lucide-react';
 
+import BookingActions from './BookingActions';
 import { formatUsd, priceBreakdown } from '@/lib/pricing';
 import type { BookingStatus, CleanBooking } from '@/lib/types';
 
@@ -33,19 +35,17 @@ function formatScheduledAt(iso: string): string {
   return `${day} at ${time}`;
 }
 
-function formatAddress(booking: CleanBooking): string | null {
-  if (!booking.address) return null;
-  const { line1, line2, city, state, postal_code: postal } = booking.address;
-  const region = [city, state].filter(Boolean).join(', ');
-  return [line1, line2, [region, postal].filter(Boolean).join(' ')]
-    .filter((part) => part && part.trim().length > 0)
-    .join('\n');
+interface Props {
+  booking: CleanBooking;
+  /** Whether the scheduled time has already passed, decided on the server. */
+  isPast: boolean;
+  hasReview: boolean;
 }
 
-export default function BookingCard({ booking }: { booking: CleanBooking }) {
+export default function BookingCard({ booking, isPast, hasReview }: Props) {
   const status = STATUS_STYLES[booking.status];
   const listing = booking.listing;
-  const address = formatAddress(booking);
+  const address = booking.address;
   const breakdown = listing?.price != null ? priceBreakdown(listing.price) : null;
 
   return (
@@ -58,7 +58,14 @@ export default function BookingCard({ booking }: { booking: CleanBooking }) {
             )}
           </h3>
           <p className="text-sm text-slate-400 mt-0.5">
-            {listing?.provider?.provider_name ?? (
+            {listing?.provider?.provider_id ? (
+              <Link
+                href={`/providers/${listing.provider.provider_id}`}
+                className="hover:text-slate-200 hover:underline transition-colors"
+              >
+                {listing.provider.provider_name ?? 'View provider'}
+              </Link>
+            ) : (
               <span className="italic text-slate-500">Provider information unavailable</span>
             )}
           </p>
@@ -117,6 +124,8 @@ export default function BookingCard({ booking }: { booking: CleanBooking }) {
           <span className="text-sm text-slate-500 italic">Price unavailable</span>
         )}
       </div>
+
+      <BookingActions booking={booking} isPast={isPast} hasReview={hasReview} />
     </article>
   );
 }

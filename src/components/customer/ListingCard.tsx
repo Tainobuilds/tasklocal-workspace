@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { CalendarClock, Star } from 'lucide-react';
 
 import { slotKey } from '@/lib/sanitize';
@@ -53,7 +54,12 @@ export default function ListingCard({ listing, onBook }: Props) {
   const hasAvailability = listing.availability.length > 0;
 
   return (
-    <article className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-700 transition-all">
+    // The whole card is the link to the detail page; the Book button below
+    // stops the click so it can still open the flow directly.
+    <Link
+      href={`/listings/${listing.listing_id}`}
+      className="group bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-600 transition-all focus:outline-none focus-visible:border-indigo-500"
+    >
       <div className="flex justify-between items-start gap-3">
         <span className="text-xs font-semibold uppercase tracking-wider bg-indigo-950 text-indigo-400 border border-indigo-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
           {SERVICE_LABELS[listing.service_type]}
@@ -66,7 +72,9 @@ export default function ListingCard({ listing, onBook }: Props) {
       </div>
 
       <div>
-        <h3 className="font-semibold text-lg text-slate-100 leading-snug">{listing.title}</h3>
+        <h3 className="font-semibold text-lg text-slate-100 leading-snug group-hover:text-white">
+          {listing.title}
+        </h3>
         <p className="text-sm text-slate-400 mt-1">
           {listing.provider?.provider_name ?? (
             <span className="italic text-slate-500">Provider information unavailable</span>
@@ -105,13 +113,17 @@ export default function ListingCard({ listing, onBook }: Props) {
 
       <button
         type="button"
-        onClick={() => onBook(listing)}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onBook(listing);
+        }}
         disabled={blocked !== null}
         title={blocked ?? undefined}
         className="mt-2 w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
       >
         {blocked ? `Unavailable — ${blocked}` : 'Book'}
       </button>
-    </article>
+    </Link>
   );
 }

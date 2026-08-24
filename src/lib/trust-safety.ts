@@ -13,7 +13,7 @@ import {
   sanitizeBookings,
   sanitizeProviders,
 } from './sanitize';
-import type { BookedListingRef } from './types';
+import type { BookedListingRef, ProviderRatingRollup } from './types';
 
 export const REPORT_STATUSES = ['open', 'under_review', 'resolved', 'dismissed'] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
@@ -37,7 +37,34 @@ export const REPORT_REASONS: Record<string, { label: string; severity: Severity 
   poor_quality: { label: 'Poor quality', severity: 'medium' },
   late_arrival: { label: 'Late arrival', severity: 'low' },
   billing_dispute: { label: 'Billing dispute', severity: 'low' },
+
+  // Categories offered to customers in the in-app report form. They live in the
+  // same vocabulary as the legacy reasons above so a customer submission lands
+  // in the queue already triaged, never in the "needs categorization" bucket.
+  off_platform_payment: { label: 'Off-platform payment request', severity: 'high' },
+  no_show_unresponsive: { label: 'No-show / unresponsive', severity: 'medium' },
+  identity_mismatch: { label: 'Identity mismatch', severity: 'critical' },
+  unsafe_or_threatening_behavior: { label: 'Unsafe or threatening behavior', severity: 'critical' },
+  property_damage_negligent_work: { label: 'Property damage / negligent work', severity: 'high' },
+  misleading_listing_or_hidden_fees: { label: 'Misleading listing or hidden fees', severity: 'medium' },
+  other: { label: 'Other', severity: 'low' },
 };
+
+/** The report form's options, in the order the customer sees them. */
+export const CUSTOMER_REPORT_CATEGORIES = [
+  'off_platform_payment',
+  'no_show_unresponsive',
+  'identity_mismatch',
+  'unsafe_or_threatening_behavior',
+  'property_damage_negligent_work',
+  'misleading_listing_or_hidden_fees',
+  'other',
+] as const;
+
+export type CustomerReportCategory = (typeof CUSTOMER_REPORT_CATEGORIES)[number];
+
+/** How long after a report the same customer reporting the same listing looks like a repeat. */
+export const DUPLICATE_REPORT_WINDOW_HOURS = 24;
 
 /** A provider is auto-surfaced only when the sample is large enough to trust. */
 export const AUTO_FLAG_RATING_THRESHOLD = 3.0;
@@ -160,16 +187,17 @@ export function buildTriageData(
   rawProviders: unknown,
   rawBookings: unknown,
   now: Date = new Date(),
+  derivedRatings?: Map<string, ProviderRatingRollup>,
 ): TriageData {
   const quarantined: QuarantinedReport[] = [];
 
-  const listingIndex = buildListingIndex(rawListings, rawProviders);
-  const { providers: providerIndex } = sanitizeProviders(rawProviders);
+  const listingIndex = buildListingIndex(rawListings, rawProviders, derivedRatings);
+  const { providers: providerIndex } = sanitizeProviders(rawProviders, derivedRatings);
 
   // Booking dates power the "report filed before the job" consistency check.
   const bookingDates = new Map<string, string>();
   try {
-    const { bookings } = sanitizeBookings(rawBookings, rawListings, rawProviders);
+    const { bookings } = sanitizeBookings(rawBookings, rawListings, rawProviders, derivedRatings);
     for (const booking of bookings) {
       if (booking.scheduledAt) bookingDates.set(booking.booking_id, booking.scheduledAt);
     }
@@ -271,6 +299,17 @@ export function buildTriageData(
       }
       if (bookingId && !bookingDates.has(bookingId)) {
         dataFlags.push(`Booking ${bookingId} does not exist in the booking data.`);
+      }
+
+      // Stamped at submission time when the same customer reported the same
+      // listing inside the duplicate window — the team should link, not re-triage.
+      if (primary['possible_duplicate'] === true) {
+        const linked = text(primary['linked_report_id']);
+        dataFlags.push(
+          linked
+            ? `Possible duplicate of ${linked} — same reporter and listing within ${DUPLICATE_REPORT_WINDOW_HOURS}h.`
+            : `Possible duplicate — same reporter and listing within ${DUPLICATE_REPORT_WINDOW_HOURS}h.`,
+        );
       }
 
       // A complaint predating the job it describes needs a human explanation.
