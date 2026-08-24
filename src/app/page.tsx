@@ -86,6 +86,8 @@ function HomeTabs() {
   const knownListingsCountRef = useRef(0);
   const activeTabRef = useRef(activeTab);
 
+  const [catalogueListings, setCatalogueListings] = useState<any[]>([]);
+
   // Hydrate the shared bookings ledger from localStorage on mount.
   useEffect(() => {
     try {
@@ -169,6 +171,25 @@ function HomeTabs() {
     return () => clearInterval(interval);
   }, []);
 
+  // Matching Chatbot searches the same active-only, validated catalogue Browse
+  // uses — not the full provider feed, so it can never surface a flagged or
+  // removed listing to a customer.
+  useEffect(() => {
+    const fetchCatalogue = async () => {
+      try {
+        const res = await fetch('/api/catalogue');
+        const data = await res.json();
+        setCatalogueListings(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCatalogue();
+    const interval = setInterval(fetchCatalogue, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Owns the actual data mutation (optimistic update, POST, reconciliation,
   // toast) while ProviderDashboard owns the "Create New Listing" form/modal UI.
   const createListing = async (formData: { title: string; service_type: string; price: string; description: string }) => {
@@ -227,7 +248,7 @@ function HomeTabs() {
           ) : isInitialLoading ? (
             <MatchingChatbotSkeleton />
           ) : (
-            <MatchingChatbot listings={listings} onBookingConfirmed={addBooking} />
+            <MatchingChatbot listings={catalogueListings} onBookingConfirmed={addBooking} />
           )}
         </div>
       </main>
