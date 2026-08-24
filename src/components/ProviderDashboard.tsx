@@ -53,11 +53,12 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
     setIsSubmitting(false);
   };
 
-  const activeServicesCount = listings.length;
+  const activeServicesCount = listings.filter((item) => (item.listing_status ?? 'active') === 'active').length;
   const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
-  const averageHourlyRate = listings.length
-    ? listings.reduce((sum, item) => sum + (Number(item.price_per_hour ?? item.price ?? item.rate) || 0), 0) / listings.length
-    : 0;
+  const validRates = listings
+    .map((item) => item.price_per_hour ?? item.price ?? item.rate)
+    .filter((rate) => typeof rate === 'number' && Number.isFinite(rate));
+  const averageHourlyRate = validRates.length ? validRates.reduce((sum, rate) => sum + rate, 0) / validRates.length : null;
 
   const strength = getListingStrength(formData);
 
@@ -102,7 +103,7 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
           </div>
           <div>
             <p className="text-xs text-slate-500">Average Hourly Rate</p>
-            <p className="text-xl font-bold text-slate-900">${averageHourlyRate.toFixed(2)}/hr</p>
+            <p className="text-xl font-bold text-slate-900">{averageHourlyRate === null ? '—' : `$${averageHourlyRate.toFixed(2)}/hr`}</p>
           </div>
         </div>
       </div>
@@ -128,21 +129,40 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
           {listings.map((item, idx) => {
             const title = item.title || item.name || item.service_name || 'Unnamed Service';
             const category = item.category || item.service_type || item.type || 'General';
-            const price = item.price_per_hour || item.price || item.rate || 0;
+            const rate = item.price_per_hour ?? item.price ?? item.rate;
+            const hasValidRate = typeof rate === 'number' && Number.isFinite(rate);
             const description = item.description || item.details || 'No description available.';
+            const status = (item.listing_status ?? 'active') as string;
+            const statusBadge =
+              status !== 'active'
+                ? {
+                    flagged: { label: 'Flagged', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    pending: { label: 'Pending review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    removed: { label: 'Removed', className: 'bg-red-50 text-red-700 border-red-200' },
+                  }[status] ?? { label: status, className: 'bg-slate-100 text-slate-600 border-slate-200' }
+                : null;
 
             return (
               <div
-                key={item.id || idx}
+                key={item.listing_id || item.id || idx}
                 className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">
                   <h3 className="font-semibold text-lg text-slate-900 truncate">{title}</h3>
-                  <span className="font-bold text-emerald-600 shrink-0">${price}/hr</span>
+                  <span className={`font-bold shrink-0 ${hasValidRate ? 'text-emerald-600' : 'text-slate-400 text-xs'}`}>
+                    {hasValidRate ? `$${rate}/hr` : 'Price needs review'}
+                  </span>
                 </div>
-                <span className="inline-block text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full mb-2">
-                  {category}
-                </span>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="inline-block text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                    {category}
+                  </span>
+                  {statusBadge && (
+                    <span className={`inline-block text-[11px] font-medium border px-2 py-0.5 rounded-full ${statusBadge.className}`}>
+                      {statusBadge.label}
+                    </span>
+                  )}
+                </div>
                 <p className="text-slate-600 text-sm line-clamp-2">{description}</p>
               </div>
             );

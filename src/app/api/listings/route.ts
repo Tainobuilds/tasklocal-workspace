@@ -1,16 +1,30 @@
 import { NextResponse } from 'next/server';
 
 import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { coercePrice } from '@/lib/sanitize';
 
 /**
- * Raw listing data, as used by the provider dashboard and the matching chatbot.
- * The customer app reads the validated catalogue instead — see `getCatalogue`.
+ * Listing data for the provider dashboard and matching chatbot: deduplicated
+ * by id and price-sanitized, but — unlike the customer catalogue in
+ * getCatalogue() — every listing_status is kept (not just "active"), so
+ * providers can still see and manage their own flagged/removed/pending listings.
  */
 export async function GET() {
-  const listings = await readJsonFile('listings.json');
-  // An unreadable or malformed file yields an empty catalogue rather than a 500,
-  // so the dashboard renders its empty state instead of breaking.
-  return NextResponse.json(Array.isArray(listings) ? listings : []);
+  const raw = await readJsonFile('listings.json');
+  const listings = Array.isArray(raw) ? raw : [];
+
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const item of listings) {
+    if (!item || typeof item !== 'object') continue;
+    const record = item as Record<string, unknown>;
+    // New listings created through this app use `id`; seeded ones use `listing_id`.
+    const id = String(record.listing_id ?? record.id ?? '');
+    if (!id) continue;
+    // Later entries win on a collision, matching the file's own append order.
+    byId.set(id, { ...record, price: coercePrice(record.price) });
+  }
+
+  return NextResponse.json([...byId.values()]);
 }
 
 export async function POST(request: Request) {
