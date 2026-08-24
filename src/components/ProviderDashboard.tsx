@@ -56,7 +56,7 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
   const activeServicesCount = listings.length;
   const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
   const averageHourlyRate = listings.length
-    ? listings.reduce((sum, item) => sum + (item.price_per_hour || item.price || item.rate || 0), 0) / listings.length
+    ? listings.reduce((sum, item) => sum + (Number(item.price_per_hour ?? item.price ?? item.rate) || 0), 0) / listings.length
     : 0;
 
   const strength = getListingStrength(formData);
@@ -127,7 +127,7 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {listings.map((item, idx) => {
             const title = item.title || item.name || item.service_name || 'Unnamed Service';
-            const category = item.category || item.type || 'General';
+            const category = item.category || item.service_type || item.type || 'General';
             const price = item.price_per_hour || item.price || item.rate || 0;
             const description = item.description || item.details || 'No description available.';
 
