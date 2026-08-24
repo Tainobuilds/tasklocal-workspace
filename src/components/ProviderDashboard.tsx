@@ -67,8 +67,8 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Provider Dashboard</h1>
-          <p className="text-slate-600 text-sm">Manage active local listings and services</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Provider Dashboard</h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Manage active local listings and services</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -80,42 +80,42 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
 
       {/* Dashboard Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
             <Layers size={18} className="text-teal-600" />
           </div>
           <div>
             <p className="text-xs text-slate-500">Active Services</p>
-            <p className="text-xl font-bold text-slate-900">{activeServicesCount}</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{activeServicesCount}</p>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
             <DollarSign size={18} className="text-emerald-600" />
           </div>
           <div>
             <p className="text-xs text-slate-500">Total Revenue</p>
-            <p className="text-xl font-bold text-slate-900">${totalRevenue.toFixed(2)}</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${totalRevenue.toFixed(2)}</p>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
             <Gauge size={18} className="text-sky-600" />
           </div>
           <div>
             <p className="text-xs text-slate-500">Average Hourly Rate</p>
-            <p className="text-xl font-bold text-slate-900">{averageHourlyRate === null ? '—' : `$${averageHourlyRate.toFixed(2)}/hr`}</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{averageHourlyRate === null ? '—' : `$${averageHourlyRate.toFixed(2)}/hr`}</p>
           </div>
         </div>
       </div>
 
       {listings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-20 px-6 border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+        <div className="flex flex-col items-center justify-center text-center py-20 px-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-800">
           <div className="h-14 w-14 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center mb-4">
             <PackageSearch size={24} className="text-teal-600" />
           </div>
-          <h3 className="text-slate-900 font-semibold mb-1">No service listings found yet!</h3>
-          <p className="text-sm text-slate-600 max-w-sm mb-5">
+          <h3 className="text-slate-900 dark:text-slate-100 font-semibold mb-1">No service listings found yet!</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mb-5">
             Publish your first service to get discovered by the AI Matcher and start receiving bookings.
           </p>
           <button
@@ -140,22 +140,22 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
                     flagged: { label: 'Flagged', className: 'bg-amber-50 text-amber-700 border-amber-200' },
                     pending: { label: 'Pending review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
                     removed: { label: 'Removed', className: 'bg-red-50 text-red-700 border-red-200' },
-                  }[status] ?? { label: status, className: 'bg-slate-100 text-slate-600 border-slate-200' }
+                  }[status] ?? { label: status, className: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700' }
                 : null;
 
             return (
               <div
                 key={item.listing_id || item.id || idx}
-                className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">
-                  <h3 className="font-semibold text-lg text-slate-900 truncate">{title}</h3>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 truncate">{title}</h3>
                   <span className={`font-bold shrink-0 ${hasValidRate ? 'text-emerald-600' : 'text-slate-400 text-xs'}`}>
                     {hasValidRate ? `$${rate}/hr` : 'Price needs review'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="inline-block text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                  <span className="inline-block text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full">
                     {category}
                   </span>
                   {statusBadge && (
@@ -164,7 +164,7 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
                     </span>
                   )}
                 </div>
-                <p className="text-slate-600 text-sm line-clamp-2">{description}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{description}</p>
               </div>
             );
           })}
@@ -174,30 +174,30 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
       {/* Create New Listing Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
-            <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
+            <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
               <X size={20} />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-slate-900">Create New Listing</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100">Create New Listing</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Service Title</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Service Title</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Deep Apartment Cleaning"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Category</label>
                   <select
                     value={formData.service_type}
                     onChange={(e) => setFormData({ ...formData, service_type: e.target.value })}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="">Select a category</option>
                     {SERVICE_TYPES.map((type) => (
@@ -208,34 +208,34 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Hourly Rate ($)</label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Hourly Rate ($)</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="45"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Description</label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Briefly describe the service..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 resize-none"
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 resize-none"
                 />
               </div>
 
               {/* Listing Strength Meter */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-slate-600">Listing Strength</span>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Listing Strength</span>
                   <span className={`text-xs font-semibold ${strength.textClass}`}>{strength.label}</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ease-out ${strength.barClass}`}
                     style={{ width: `${strength.score}%` }}
