@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchX } from 'lucide-react';
 
 import BookingFlow from './BookingFlow';
@@ -19,9 +19,28 @@ interface Props {
   signedIn: boolean;
 }
 
-export default function CustomerApp({ listings, defaultAddress, signedIn }: Props) {
+export default function CustomerApp({ listings: initialListings, defaultAddress, signedIn }: Props) {
+  const [listings, setListings] = useState<CleanListing[]>(initialListings);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [booking, setBooking] = useState<CleanListing | null>(null);
+
+  // Keeps the customer catalogue live: a listing created in the Provider App
+  // shows up here without a manual reload, on the same cadence the Provider
+  // Dashboard already polls at.
+  useEffect(() => {
+    const fetchCatalogue = async () => {
+      try {
+        const res = await fetch('/api/catalogue');
+        const data = await res.json();
+        if (Array.isArray(data)) setListings(data);
+      } catch (err) {
+        console.error('[tasklocal] Could not refresh the catalogue:', err);
+      }
+    };
+
+    const interval = setInterval(fetchCatalogue, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   /** Slider bounds come from listings that actually have a usable price. */
   const bounds = useMemo(() => {
