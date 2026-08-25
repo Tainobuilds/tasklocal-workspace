@@ -210,11 +210,20 @@ function scoreKeywords(
   const matched: string[] = [];
 
   for (const keyword of keywords) {
-    const needle = keyword.toLowerCase();
-    if (titleTokens.some((token) => isWordMatch(needle, token))) {
+    // The model returns phrases as often as single words ("clean out",
+    // "Emergency Pipe Repair"), and a phrase compared whole against a single
+    // word-token can never match. Splitting here rather than in the intent
+    // keeps the logged intent exactly what the model produced.
+    const needles = tokenize(keyword);
+    if (needles.length === 0) continue;
+
+    const hits = (tokens: string[]) =>
+      needles.some((needle) => tokens.some((token) => isWordMatch(needle, token)));
+
+    if (hits(titleTokens)) {
       score += TITLE_WEIGHT;
       matched.push(keyword);
-    } else if (descriptionTokens.some((token) => isWordMatch(needle, token))) {
+    } else if (hits(descriptionTokens)) {
       score += DESCRIPTION_WEIGHT;
       matched.push(keyword);
     }

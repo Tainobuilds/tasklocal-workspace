@@ -224,6 +224,29 @@ describe('scenario results', () => {
   });
 });
 
+describe('multi-word keywords', () => {
+  // Regression: live extraction returns phrases as often as single words
+  // ("clean out", "Emergency Pipe Repair"). Compared whole against a single
+  // word-token, a phrase could never match, so naming a real listing returned
+  // nothing at all. Found against the live API, not by the tests above, which
+  // had fed the matcher pre-split keywords.
+  it('matches a phrase keyword the model returns as one string', () => {
+    const outcome = matchListings(intent({ keywords: ['Emergency Pipe Repair'] }), catalogue);
+    expect(ids(outcome.matches)).toEqual(['list_103', 'list_104']);
+  });
+
+  it('still refuses the rejected listing the phrase actually names', () => {
+    const outcome = matchListings(intent({ keywords: ['Emergency Pipe Repair'] }), catalogue);
+    expect(ids(outcome.matches)).not.toContain('list_114');
+  });
+
+  it('matches "clean out" against cleaning listings', () => {
+    const outcome = matchListings(intent({ keywords: ['clean out'] }), catalogue);
+    expect(outcome.matches.length).toBeGreaterThan(0);
+    for (const id of ids(outcome.matches)) expect(matchableIds).toContain(id);
+  });
+});
+
 describe('ordering is stable and explainable', () => {
   const scenario = SCENARIOS[0];
 

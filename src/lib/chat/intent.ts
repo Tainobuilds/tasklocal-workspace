@@ -75,13 +75,20 @@ const INTENT_SCHEMA = {
       description: 'The service category the user asked for, or null if they did not name one.',
     },
     max_price: {
-      anyOf: [{ type: 'number', minimum: 0 }, { type: 'null' }],
-      description: 'An upper price in USD the user explicitly stated, or null.',
+      // No `minimum` here: structured outputs reject numeric range keywords
+      // ("For 'number' type, property 'minimum' is not supported"). The bound
+      // is enforced in parseIntentPayload instead, which rejects a negative
+      // price rather than quietly nulling it.
+      anyOf: [{ type: 'number' }, { type: 'null' }],
+      description: 'An upper price in USD the user explicitly stated, or null. Never negative.',
     },
     keywords: {
+      // No `maxItems`: structured outputs reject array size keywords too. A
+      // code-side cap is deliberately NOT substituted — truncating would log
+      // an intent the model did not produce. `max_tokens` already bounds the
+      // list, and scoring cost is trivial at this corpus size.
       type: 'array',
       items: { type: 'string' },
-      maxItems: 12,
       description: 'Concrete task words taken from the message itself.',
     },
     availability_hint: {
