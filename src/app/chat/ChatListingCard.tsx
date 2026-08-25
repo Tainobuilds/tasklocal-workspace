@@ -47,14 +47,20 @@ function formatPrice(match: Match): string {
 function whyThisMatched(match: Match, intent: Intent): string {
   const parts: string[] = [];
 
-  if (match.reason.filters.includes('service_type') && intent.service_type !== null) {
-    parts.push(`${intent.service_type} service`);
+  if (match.reason.filters.includes('service_type') && intent.service_types.length > 0) {
+    parts.push(`${match.service_type} service`);
   }
   if (match.reason.filters.includes('max_price') && intent.max_price !== null) {
     parts.push(`under ${formatUsd(intent.max_price)}`);
   }
   if (match.reason.matchedKeywords.length > 0) {
     parts.push(match.reason.matchedKeywords.map((word) => `“${word}”`).join(', '));
+  }
+
+  // Said plainly: this listing is here because the request named its category,
+  // not because it out-scored the others.
+  if (match.reason.filters.includes('service_type_coverage')) {
+    parts.push(`covers your ${match.service_type} request`);
   }
 
   return parts.length > 0 ? parts.join(' · ') : 'Currently active';

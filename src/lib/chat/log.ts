@@ -37,7 +37,7 @@
 import type { Intent, Match } from './types';
 
 /** Bumped when the shape below changes, so old and new records stay sortable. */
-export const LOG_SCHEMA_VERSION = 'turn-v1';
+export const LOG_SCHEMA_VERSION = 'turn-v2';
 
 /** Per-match filter evidence, in machine-readable form. */
 export interface LoggedMatch {

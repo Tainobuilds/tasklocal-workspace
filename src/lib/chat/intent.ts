@@ -28,7 +28,7 @@ export const INTENT_MODEL = 'claude-sonnet-4-6';
  * Logged with every turn: without it, comparing rankings across a prompt
  * change is meaningless, because the intents behind them are not comparable.
  */
-export const PROMPT_VERSION = 'intent-v2';
+export const PROMPT_VERSION = 'intent-v3';
 
 /**
  * Refused rather than truncated. Silently cutting a long message would log an
@@ -68,11 +68,12 @@ export class IntentError extends Error {
 const INTENT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['service_type', 'max_price', 'keywords', 'availability_hint'],
+  required: ['service_types', 'max_price', 'keywords', 'availability_hint'],
   properties: {
-    service_type: {
-      anyOf: [{ type: 'string', enum: [...SERVICE_TYPES] }, { type: 'null' }],
-      description: 'The service category the user asked for, or null if they did not name one.',
+    service_types: {
+      type: 'array',
+      items: { type: 'string', enum: [...SERVICE_TYPES] },
+      description: 'Every service category this message asks for. Empty when it names none.',
     },
     max_price: {
       // No `minimum` here: structured outputs reject numeric range keywords
@@ -103,9 +104,9 @@ const SYSTEM_PROMPT = [
   '',
   'Fill exactly these four fields:',
   '',
-  `service_type - one of: ${SERVICE_TYPES.join(', ')}. Use null if the message does not ask for one of these, even when the request is a real job. Do not stretch a request to fit a category.`,
+  `service_types - an array of the categories this message asks for, drawn from: ${SERVICE_TYPES.join(', ')}. Use [] when it asks for none of them, even when the request is a real job. Do not stretch a request to fit a category.`,
   '',
-  'If one message asks for work spanning more than one of those categories ("clean out my garage and move some boxes" is both cleaning and moving), service_type is null. This field is single-valued, so picking one category silently discards the other half of the request; leaving it null lets the keywords carry both.',
+  'List more than one ONLY when the message genuinely asks for work in more than one category. "clean out my garage and move some boxes" asks for both, so it is ["cleaning", "moving"]. "deep clean my flat" asks for one, so it is ["cleaning"]. Never pad the array with a category that was not asked for: each extra entry reserves a result slot and pushes out a better match.',
   '',
   'max_price - a number, only when the message states an upper price ("under $80", "no more than 100"). NEVER infer one. "cheap", "affordable", "budget", "not too expensive" and "as low as possible" all mean null. Inventing a number that was not stated is the worst error you can make here.',
   '',
@@ -118,6 +119,37 @@ const SYSTEM_PROMPT = [
   '- Never guess in order to be helpful. null is a correct and useful answer.',
   '- A nonsense, empty or off-topic message yields nulls and an empty keyword list. That is the right output, not a failure.',
 ].join('\n');
+
+/**
+ * Validates the requested categories against the team's agreed set.
+ *
+ * De-duplicated so a repeated category cannot reserve two result slots, and
+ * order-preserving so the log shows the order the user expressed them in.
+ */
+function normalizeServiceTypes(raw: unknown): ServiceType[] {
+  if (raw === null || raw === undefined) return [];
+  if (!Array.isArray(raw)) {
+    throw new IntentError('invalid_output', 'service_types was not an array');
+  }
+  const seen = new Set<string>();
+  const out: ServiceType[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== 'string') {
+      throw new IntentError('invalid_output', 'service_types contained a non-string entry');
+    }
+    const normalized = entry.trim().toLowerCase();
+    if (!(SERVICE_TYPES as readonly string[]).includes(normalized)) {
+      throw new IntentError(
+        'invalid_output',
+        `service_type ${JSON.stringify(entry)} is outside the agreed set`,
+      );
+    }
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized as ServiceType);
+  }
+  return out;
+}
 
 /** Trims, drops blanks, and de-duplicates case-insensitively, keeping the model's casing. */
 function normalizeKeywords(raw: unknown): string[] {
@@ -153,21 +185,7 @@ export function parseIntentPayload(raw: unknown): Intent {
   }
   const record = raw as Record<string, unknown>;
 
-  const rawService = record['service_type'];
-  let service_type: ServiceType | null = null;
-  if (rawService !== null && rawService !== undefined) {
-    if (typeof rawService !== 'string') {
-      throw new IntentError('invalid_output', 'service_type was not a string or null');
-    }
-    const normalized = rawService.trim().toLowerCase();
-    if (!(SERVICE_TYPES as readonly string[]).includes(normalized)) {
-      throw new IntentError(
-        'invalid_output',
-        `service_type ${JSON.stringify(rawService)} is outside the agreed set`,
-      );
-    }
-    service_type = normalized as ServiceType;
-  }
+  const service_types = normalizeServiceTypes(record['service_types']);
 
   const rawPrice = record['max_price'];
   let max_price: number | null = null;
@@ -194,7 +212,7 @@ export function parseIntentPayload(raw: unknown): Intent {
   }
 
   return {
-    service_type,
+    service_types,
     max_price,
     keywords: normalizeKeywords(record['keywords']),
     availability_hint,

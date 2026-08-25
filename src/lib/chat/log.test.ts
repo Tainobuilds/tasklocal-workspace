@@ -12,7 +12,7 @@ import { logTurn, UnknownListingLoggedError, type TurnLogInput, type TurnLogReco
 import type { Intent, Match } from './types';
 
 const intent: Intent = {
-  service_type: 'cleaning',
+  service_types: ['cleaning'],
   max_price: null,
   keywords: ['clean'],
   availability_hint: '3am',
@@ -42,7 +42,7 @@ function input(overrides: Partial<TurnLogInput> = {}): TurnLogInput {
     inheritedFields: [],
     intentSource: 'model',
     model: 'claude-sonnet-4-6',
-    promptVersion: 'intent-v1',
+    promptVersion: 'intent-v3',
     matcherVersion: 'matcher-v1',
     matches: [match],
     matchableCount: 9,
@@ -80,7 +80,7 @@ describe('accuracy rules', () => {
   it('preserves intent nulls rather than coercing them', () => {
     const record = capture(() => logTurn(input(), validIds));
     expect(record.intentEffective?.max_price).toBe(null);
-    expect(record.intentEffective?.service_type).toBe('cleaning');
+    expect(record.intentEffective?.service_types).toEqual(['cleaning']);
   });
 
   it('records the timing hint that was captured but never filtered on', () => {
@@ -101,9 +101,9 @@ describe('accuracy rules', () => {
 
   it('always carries the versions a replay needs', () => {
     const record = capture(() => logTurn(input(), validIds));
-    expect(record.schemaVersion).toBe('turn-v1');
+    expect(record.schemaVersion).toBe('turn-v2');
     expect(record.matcherVersion).toBe('matcher-v1');
-    expect(record.promptVersion).toBe('intent-v1');
+    expect(record.promptVersion).toBe('intent-v3');
     expect(record.model).toBe('claude-sonnet-4-6');
   });
 

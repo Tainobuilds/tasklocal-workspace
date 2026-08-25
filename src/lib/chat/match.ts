@@ -235,8 +235,60 @@ function scoreKeywords(
 /** True when the user expressed nothing this module can search on. */
 export function isUnsearchableIntent(intent: Intent): boolean {
   return (
-    intent.service_type === null && intent.max_price === null && intent.keywords.length === 0
+    intent.service_types.length === 0 &&
+    intent.max_price === null &&
+    intent.keywords.length === 0
   );
+}
+
+/**
+ * Reorders the top N so that every requested service type is represented.
+ *
+ * Applies ONLY when the request spans more than one category. A single-type
+ * request keeps the plain score/price/id ranking untouched, so the common
+ * case is completely unaffected by this rule.
+ *
+ * Why it is needed: "clean out my garage and move some boxes" scores four
+ * cleaning listings and one moving listing, and the tie-break on price puts
+ * three cleaning listings ahead of the move. The user asked for two things
+ * and got one — a wrong answer, not a cosmetic one.
+ *
+ * A type with no candidates reserves nothing, so nothing is wasted on a
+ * category the dataset cannot serve. The chosen set is finally re-sorted by
+ * the ordinary comparator, so ordering stays explainable.
+ */
+function reserveCoverage<T extends { listing: MatchableListing }>(
+  ranked: readonly T[],
+  serviceTypes: readonly Intent['service_types'][number][],
+  limit: number,
+): { chosen: T[]; coverageIds: Set<string> } {
+  const chosen: T[] = [];
+  const taken = new Set<string>();
+  const coverageIds = new Set<string>();
+
+  for (const type of serviceTypes) {
+    if (chosen.length >= limit) break;
+    const best = ranked.find(
+      (entry) => entry.listing.service_type === type && !taken.has(entry.listing.listing_id),
+    );
+    if (!best) continue; // this category has nothing to offer; no slot burned
+    chosen.push(best);
+    taken.add(best.listing.listing_id);
+    coverageIds.add(best.listing.listing_id);
+  }
+
+  // A reserved pick that would have made the cut on merit anyway is not
+  // "coverage" — it earned its place, and the log should not imply otherwise.
+  for (const entry of ranked.slice(0, limit)) coverageIds.delete(entry.listing.listing_id);
+
+  for (const entry of ranked) {
+    if (chosen.length >= limit) break;
+    if (taken.has(entry.listing.listing_id)) continue;
+    chosen.push(entry);
+    taken.add(entry.listing.listing_id);
+  }
+
+  return { chosen, coverageIds };
 }
 
 function buildExplanation(
@@ -262,11 +314,12 @@ function buildExplanation(
 
   // Report the first stage that emptied the pool: that is the constraint worth
   // loosening, and it is derived from the counters rather than guessed.
-  if (intent.service_type !== null && counts.afterServiceType === 0) {
-    return `No active ${intent.service_type} listings at all right now.${timeCaveat} Try a different kind of service.`;
+  if (intent.service_types.length > 0 && counts.afterServiceType === 0) {
+    return `No active ${intent.service_types.join(' or ')} listings at all right now.${timeCaveat} Try a different kind of service.`;
   }
   if (intent.max_price !== null && counts.afterMaxPrice === 0) {
-    const scope = intent.service_type === null ? 'listings' : `${intent.service_type} listings`;
+    const scope =
+      intent.service_types.length === 0 ? 'listings' : `${intent.service_types.join(' or ')} listings`;
     return `No active ${scope} at or under $${intent.max_price}.${timeCaveat} Try raising the budget.`;
   }
   if (intent.keywords.length > 0 && counts.afterKeyword === 0) {
@@ -311,8 +364,8 @@ export function matchListings(intent: Intent, listings: readonly CleanListing[])
 
   let pool = matchable;
 
-  if (intent.service_type !== null) {
-    pool = pool.filter((listing) => listing.service_type === intent.service_type);
+  if (intent.service_types.length > 0) {
+    pool = pool.filter((listing) => intent.service_types.includes(listing.service_type));
   }
   counts.afterServiceType = pool.length;
 
@@ -331,13 +384,20 @@ export function matchListings(intent: Intent, listings: readonly CleanListing[])
   }
   counts.afterKeyword = scored.length;
 
-  scored.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    if (a.listing.price !== b.listing.price) return a.listing.price - b.listing.price;
-    return a.listing.listing_id.localeCompare(b.listing.listing_id);
-  });
+  scored.sort(compareScored);
 
-  const matches: Match[] = scored.slice(0, TOP_N).map((entry) => ({
+  // Single-type and no-type requests take the plain ranking, unchanged.
+  const { chosen, coverageIds } =
+    intent.service_types.length > 1
+      ? reserveCoverage(scored, intent.service_types, TOP_N)
+      : { chosen: scored.slice(0, TOP_N), coverageIds: new Set<string>() };
+
+  // Re-sorted by the same comparator so the order shown is still "best match
+  // first, then cheaper, then stable by id" — coverage decides membership of
+  // the top three, never their order.
+  chosen.sort(compareScored);
+
+  const matches: Match[] = chosen.map((entry) => ({
     listing_id: entry.listing.listing_id,
     title: entry.listing.title,
     description: entry.listing.description,
@@ -346,7 +406,7 @@ export function matchListings(intent: Intent, listings: readonly CleanListing[])
     price_type: PRICE_TYPE_FALLBACK,
     provider_name: entry.listing.provider_name,
     availability: entry.listing.availability,
-    reason: buildReason(intent, entry.score, entry.matched),
+    reason: buildReason(intent, entry.score, entry.matched, coverageIds.has(entry.listing.listing_id)),
   }));
 
   assertNoFabricatedListings(matches, matchable);
@@ -354,15 +414,31 @@ export function matchListings(intent: Intent, listings: readonly CleanListing[])
   return { matches, rejected, counts, explanation: buildExplanation(intent, counts, matches.length) };
 }
 
+/** The one ranking comparator, used for both the initial sort and the re-sort. */
+function compareScored(
+  a: { score: number; listing: MatchableListing },
+  b: { score: number; listing: MatchableListing },
+): number {
+  if (b.score !== a.score) return b.score - a.score;
+  if (a.listing.price !== b.listing.price) return a.listing.price - b.listing.price;
+  return a.listing.listing_id.localeCompare(b.listing.listing_id);
+}
+
 /**
  * Records only the filters that actually constrained this result, in the order
  * they were applied. Note there is no availability member to record.
  */
-function buildReason(intent: Intent, score: number, matched: string[]): MatchReason {
+function buildReason(
+  intent: Intent,
+  score: number,
+  matched: string[],
+  viaCoverage: boolean,
+): MatchReason {
   const filters: MatchFilter[] = ['listing_status_active'];
-  if (intent.service_type !== null) filters.push('service_type');
+  if (intent.service_types.length > 0) filters.push('service_type');
   if (intent.max_price !== null) filters.push('max_price');
   if (score > 0) filters.push('keyword');
+  if (viaCoverage) filters.push('service_type_coverage');
   return { filters, keywordScore: score, matchedKeywords: matched };
 }
 

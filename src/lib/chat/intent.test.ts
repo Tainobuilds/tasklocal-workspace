@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { IntentError, MAX_MESSAGE_CHARS, parseIntent, parseIntentPayload } from './intent';
 
 const wellFormed = {
-  service_type: 'cleaning',
+  service_types: ['cleaning'],
   max_price: 80,
   keywords: ['garage', 'boxes'],
   availability_hint: 'this weekend',
@@ -58,13 +58,13 @@ describe('payload validation', () => {
 
   it('preserves nulls rather than substituting defaults', () => {
     const parsed = parseIntentPayload({
-      service_type: null,
+      service_types: [],
       max_price: null,
       keywords: [],
       availability_hint: null,
     });
     expect(parsed).toEqual({
-      service_type: null,
+      service_types: [],
       max_price: null,
       keywords: [],
       availability_hint: null,
@@ -78,17 +78,39 @@ describe('payload validation', () => {
     expect(parseIntentPayload({ ...wellFormed, max_price: 0 }).max_price).toBe(0);
   });
 
-  it('rejects a service_type outside the agreed set', () => {
+  it('rejects a service type outside the agreed set', () => {
     // "relocation" is exactly the value that dirties data/listings.json.
-    expect(() => parseIntentPayload({ ...wellFormed, service_type: 'relocation' })).toThrow(
+    expect(() => parseIntentPayload({ ...wellFormed, service_types: ['relocation'] })).toThrow(
       IntentError,
     );
+    expect(() =>
+      parseIntentPayload({ ...wellFormed, service_types: ['cleaning', 'relocation'] }),
+    ).toThrow(IntentError);
   });
 
-  it('normalises the casing of a valid service_type', () => {
-    expect(parseIntentPayload({ ...wellFormed, service_type: 'Cleaning' }).service_type).toBe(
-      'cleaning',
+  it('normalises the casing of a valid service type', () => {
+    expect(
+      parseIntentPayload({ ...wellFormed, service_types: ['Cleaning'] }).service_types,
+    ).toEqual(['cleaning']);
+  });
+
+  it('keeps a genuine multi-category request as two entries, in order', () => {
+    expect(
+      parseIntentPayload({ ...wellFormed, service_types: ['cleaning', 'moving'] }).service_types,
+    ).toEqual(['cleaning', 'moving']);
+  });
+
+  it('de-duplicates so one category cannot reserve two result slots', () => {
+    expect(
+      parseIntentPayload({ ...wellFormed, service_types: ['moving', 'moving'] }).service_types,
+    ).toEqual(['moving']);
+  });
+
+  it('rejects service_types that is not an array of strings', () => {
+    expect(() => parseIntentPayload({ ...wellFormed, service_types: 'cleaning' })).toThrow(
+      IntentError,
     );
+    expect(() => parseIntentPayload({ ...wellFormed, service_types: [1] })).toThrow(IntentError);
   });
 
   it('rejects a negative price instead of quietly nulling it', () => {

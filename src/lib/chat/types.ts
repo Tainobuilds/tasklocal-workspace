@@ -54,8 +54,21 @@ export interface MatchRequest {
  * - The model supplies these terms; it never chooses results. See `match.ts`.
  */
 export interface Intent {
-  /** Only ever a value from the team's agreed `SERVICE_TYPES`, or null. */
-  service_type: ServiceType | null;
+  /**
+   * Every category this message asked for, from the team's agreed
+   * `SERVICE_TYPES`.
+   *
+   * `[]` means the user named none. One entry means one. Two or more means
+   * the request genuinely spans categories ("clean out my garage and move
+   * some boxes"), which the matcher honours by guaranteeing each requested
+   * type a place in the results.
+   *
+   * A single nullable `service_type` cannot express that third case: it would
+   * have to record `null` — "the user expressed nothing" — for a request that
+   * expressed two things, which is exactly the kind of false record this log
+   * must not contain.
+   */
+  service_types: ServiceType[];
   /**
    * An upper price bound in USD, only when the user stated one.
    * The model is forbidden from inferring a budget from words like "cheap".
@@ -87,7 +100,18 @@ export interface Intent {
  *
  * There is intentionally no availability member — see `Intent.availability_hint`.
  */
-export type MatchFilter = 'listing_status_active' | 'service_type' | 'max_price' | 'keyword';
+export type MatchFilter =
+  | 'listing_status_active'
+  | 'service_type'
+  | 'max_price'
+  | 'keyword'
+  /**
+   * This listing holds the slot reserved for one of the requested service
+   * types. Recorded separately because it did not earn its rank on score
+   * alone, and a ranking model trained on this log would otherwise learn the
+   * wrong signal from its position.
+   */
+  | 'service_type_coverage';
 
 export interface MatchReason {
   /** Filters this listing actually satisfied, in the order they were applied. */

@@ -42,7 +42,7 @@ const rejectedIds = rejected.map((listing) => listing.listing_id).sort();
 
 function intent(overrides: Partial<Intent> = {}): Intent {
   return {
-    service_type: null,
+    service_types: [],
     max_price: null,
     keywords: [],
     availability_hint: null,
@@ -66,13 +66,13 @@ const SCENARIOS: Array<{ name: string; message: string; intent: Intent }> = [
   {
     name: 'cheap cleaning under $80',
     message: 'cheap cleaning under $80',
-    intent: intent({ service_type: 'cleaning', max_price: 80, keywords: ['cleaning'] }),
+    intent: intent({ service_types: ['cleaning'], max_price: 80, keywords: ['cleaning'] }),
   },
   {
     name: 'plumber at 3am',
     message: 'I need a plumber at 3am',
     intent: intent({
-      service_type: 'handyman',
+      service_types: ['handyman'],
       keywords: ['plumber'],
       availability_hint: '3am',
     }),
@@ -85,7 +85,7 @@ const SCENARIOS: Array<{ name: string; message: string; intent: Intent }> = [
   {
     name: 'names a listing that is flagged',
     message: 'I want the 2-person furniture move',
-    intent: intent({ service_type: 'moving', keywords: ['furniture', 'move'] }),
+    intent: intent({ service_types: ['moving'], keywords: ['furniture', 'move'] }),
   },
   {
     name: 'no possible match',
@@ -244,6 +244,78 @@ describe('multi-word keywords', () => {
     const outcome = matchListings(intent({ keywords: ['clean out'] }), catalogue);
     expect(outcome.matches.length).toBeGreaterThan(0);
     for (const id of ids(outcome.matches)) expect(matchableIds).toContain(id);
+  });
+});
+
+describe('service-type coverage for multi-category requests', () => {
+  // "clean out my garage and move some boxes" is the brief's own example, and
+  // it is the demo query. On score alone it returns three cleaning listings
+  // and no move: list_107 scores 4, then four candidates tie on 2 and the
+  // price tie-break puts the cheap cleans ahead of the $200 move. A request
+  // for two things answered with one is a wrong answer, not a cosmetic one.
+  const spanning = intent({
+    service_types: ['cleaning', 'moving'],
+    keywords: ['clean out', 'garage', 'move', 'boxes'],
+  });
+
+  it('guarantees each requested type a place in the top three', () => {
+    const matches = matchListings(spanning, catalogue).matches;
+    const types = new Set(matches.map((match) => match.service_type));
+    expect(types.has('cleaning')).toBe(true);
+    expect(types.has('moving')).toBe(true);
+    expect(matches.length).toBe(TOP_N);
+  });
+
+  it('keeps the best overall match first rather than reordering for coverage', () => {
+    const matches = matchListings(spanning, catalogue).matches;
+    // list_107 "Move-Out Deep Clean" is the only listing hitting both halves.
+    expect(matches[0].listing_id).toBe('list_107');
+    expect(matches[0].reason.keywordScore).toBe(4);
+  });
+
+  it('flags the reserved listing so the log does not imply it out-ranked others', () => {
+    const matches = matchListings(spanning, catalogue).matches;
+    const move = matches.find((match) => match.service_type === 'moving');
+    expect(move?.reason.filters).toContain('service_type_coverage');
+
+    // The listing that led on merit is not labelled as coverage.
+    expect(matches[0].reason.filters).not.toContain('service_type_coverage');
+  });
+
+  it('still returns only listings from the validated set', () => {
+    for (const id of ids(matchListings(spanning, catalogue).matches)) {
+      expect(matchableIds).toContain(id);
+      expect(rejectedIds).not.toContain(id);
+    }
+  });
+
+  it('reserves nothing for a requested type the dataset cannot serve', () => {
+    // No handyman listing mentions these words, so handyman burns no slot and
+    // the three cleaning matches are returned instead of two.
+    const outcome = matchListings(
+      intent({ service_types: ['cleaning', 'handyman'], keywords: ['clean'] }),
+      catalogue,
+    );
+    expect(outcome.matches.length).toBe(TOP_N);
+    for (const match of outcome.matches) expect(match.service_type).toBe('cleaning');
+  });
+
+  it('leaves a single-type request completely untouched', () => {
+    const single = intent({ service_types: ['cleaning'], keywords: ['clean'] });
+    // Plain score/price/id order: every cleaning listing scores 2 on "clean"
+    // alone, so the tie-break on price decides, and list_107 ($180) misses out.
+    const before = ['list_108', 'list_102', 'list_110'];
+    expect(ids(matchListings(single, catalogue).matches)).toEqual(before);
+    for (const match of matchListings(single, catalogue).matches) {
+      expect(match.reason.filters).not.toContain('service_type_coverage');
+    }
+  });
+
+  it('leaves a no-type request completely untouched', () => {
+    const none = intent({ keywords: ['clean'] });
+    for (const match of matchListings(none, catalogue).matches) {
+      expect(match.reason.filters).not.toContain('service_type_coverage');
+    }
   });
 });
 
