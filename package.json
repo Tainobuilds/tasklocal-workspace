@@ -11,6 +11,7 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.1",
     "@stripe/stripe-js": "^9.13.0",
+    "@supabase/supabase-js": "^2.112.4",
     "lucide-react": "^1.33.0",
     "next": "16.3.1",
     "next-themes": "^0.4.6",
