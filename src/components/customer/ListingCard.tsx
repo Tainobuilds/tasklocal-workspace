@@ -34,7 +34,7 @@ function RatingLine({ listing }: { listing: CleanListing }) {
   }
 
   return (
-    <span className="flex items-center gap-1 text-slate-300">
+    <span className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
       <Star size={13} className="fill-amber-400 text-amber-400" />
       <span className="font-medium">{rating.toFixed(1)}</span>
       <span className="text-slate-500">
@@ -58,10 +58,10 @@ export default function ListingCard({ listing, onBook }: Props) {
     // stops the click so it can still open the flow directly.
     <Link
       href={`/listings/${listing.listing_id}`}
-      className="group bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-600 transition-all focus:outline-none focus-visible:border-indigo-500"
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all focus:outline-none focus-visible:border-teal-500"
     >
       <div className="flex justify-between items-start gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider bg-indigo-950 text-indigo-400 border border-indigo-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+        <span className="text-xs font-semibold uppercase tracking-wider bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
           {SERVICE_LABELS[listing.service_type]}
         </span>
         {listing.price === null ? (
@@ -72,10 +72,10 @@ export default function ListingCard({ listing, onBook }: Props) {
       </div>
 
       <div>
-        <h3 className="font-semibold text-lg text-slate-100 leading-snug group-hover:text-white">
+        <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 leading-snug group-hover:text-slate-950 dark:group-hover:text-white">
           {listing.title}
         </h3>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           {listing.provider?.provider_name ?? (
             <span className="italic text-slate-500">Provider information unavailable</span>
           )}
@@ -86,7 +86,7 @@ export default function ListingCard({ listing, onBook }: Props) {
         <RatingLine listing={listing} />
       </div>
 
-      <p className="text-slate-400 text-sm line-clamp-2">
+      <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">
         {listing.description ?? <span className="italic text-slate-500">No description provided</span>}
       </p>
 
@@ -100,7 +100,7 @@ export default function ListingCard({ listing, onBook }: Props) {
             {listing.availability.map((slot) => (
               <span
                 key={slotKey(slot)}
-                className="text-xs bg-slate-950 border border-slate-800 text-slate-300 px-2 py-0.5 rounded-md"
+                className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md"
               >
                 {slotKey(slot)}
               </span>
@@ -120,7 +120,7 @@ export default function ListingCard({ listing, onBook }: Props) {
         }}
         disabled={blocked !== null}
         title={blocked ?? undefined}
-        className="mt-2 w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
+        className="mt-2 w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
       >
         {blocked ? `Unavailable — ${blocked}` : 'Book'}
       </button>

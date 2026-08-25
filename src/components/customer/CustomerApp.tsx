@@ -108,8 +108,8 @@ export default function CustomerApp({ listings: initialListings, defaultAddress,
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Find a service</h1>
-        <p className="text-slate-400 text-sm">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Find a service</h1>
+        <p className="text-slate-600 dark:text-slate-400 text-sm">
           Browse verified local providers and book in a few steps.
         </p>
       </div>
@@ -123,13 +123,13 @@ export default function CustomerApp({ listings: initialListings, defaultAddress,
       />
 
       {failed && (
-        <p className="mb-4 text-sm text-amber-400 bg-amber-950/40 border border-amber-800/60 rounded-lg p-3">
+        <p className="mb-4 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg p-3">
           Filters could not be applied, so every available listing is shown.
         </p>
       )}
 
       <div className="flex items-baseline justify-between mb-3">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           {visible.length} {visible.length === 1 ? 'listing' : 'listings'}
         </p>
         {hiddenByUnknownPrice > 0 && (
@@ -140,9 +140,9 @@ export default function CustomerApp({ listings: initialListings, defaultAddress,
       </div>
 
       {visible.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-slate-800 rounded-2xl">
-          <SearchX size={28} className="text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-300 font-medium">No listings match these filters</p>
+        <div className="text-center py-16 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+          <SearchX size={28} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-700 dark:text-slate-300 font-medium">No listings match these filters</p>
           <p className="text-sm text-slate-500 mt-1">
             Try widening the price range or selecting more availability.
           </p>
@@ -150,7 +150,7 @@ export default function CustomerApp({ listings: initialListings, defaultAddress,
             <button
               type="button"
               onClick={() => setFilters(NO_FILTERS)}
-              className="mt-4 text-sm text-indigo-400 hover:text-indigo-300"
+              className="mt-4 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
             >
               Clear all filters
             </button>

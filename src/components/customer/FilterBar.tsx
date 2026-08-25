@@ -55,14 +55,14 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
   return (
     <section
       aria-label="Filter listings"
-      className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6"
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 mb-6"
     >
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 text-slate-200">
+        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
           <SlidersHorizontal size={16} />
-          <h2 className="font-semibold text-sm">Filters</h2>
+          <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100">Filters</h2>
           {activeCount > 0 && (
-            <span className="text-xs bg-indigo-950 text-indigo-400 border border-indigo-800/50 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50 px-2 py-0.5 rounded-full">
               {activeCount} active
             </span>
           )}
@@ -71,7 +71,7 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
           <button
             type="button"
             onClick={clearAll}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
           >
             <X size={13} /> Clear all
           </button>
@@ -95,8 +95,8 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                   onClick={() => toggleService(type)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
                     active
-                      ? 'bg-indigo-600 border-indigo-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-teal-600 border-teal-600 text-white'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   {SERVICE_LABELS[type]}
@@ -112,16 +112,16 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
             Price
           </legend>
           <div className="flex items-baseline justify-between text-sm mb-2">
-            <span className="text-slate-200 font-medium">
+            <span className="text-slate-700 dark:text-slate-200 font-medium">
               {formatUsd(Math.min(minValue, maxValue))} – {formatUsd(Math.max(minValue, maxValue))}
             </span>
-            {swapped && <span className="text-xs text-amber-400">Range auto-corrected</span>}
+            {swapped && <span className="text-xs text-amber-700 dark:text-amber-400">Range auto-corrected</span>}
           </div>
 
           <div className="relative h-6 flex items-center">
-            <div className="absolute inset-x-0 h-1.5 rounded-full bg-slate-800" />
+            <div className="absolute inset-x-0 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             <div
-              className="absolute h-1.5 rounded-full bg-indigo-500"
+              className="absolute h-1.5 rounded-full bg-teal-500"
               style={{ left: `${leftPct}%`, width: `${Math.max(rightPct - leftPct, 0)}%` }}
             />
             <input
@@ -171,8 +171,8 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                       onClick={() => toggleSlot(slot)}
                       className={`text-[11px] py-1 rounded border transition-all ${
                         active
-                          ? 'bg-indigo-600 border-indigo-500 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
+                          ? 'bg-teal-600 border-teal-600 text-white'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       {period}
