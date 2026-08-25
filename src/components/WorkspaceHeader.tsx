@@ -5,6 +5,8 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Store, MessageSquare, Search, Moon, Sun, ClipboardList } from 'lucide-react';
 
+import AccountMenu from './AccountMenu';
+
 interface Props {
   active: 'provider' | 'chatbot' | 'customer';
   /** Provided by page.tsx, which switches tabs in place; browse omits it so tabs navigate instead. */
@@ -103,6 +105,8 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
               )}
             </Link>
           )}
+
+          <AccountMenu />
         </div>
       </div>
     </header>

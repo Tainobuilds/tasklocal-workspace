@@ -29,9 +29,33 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const newListing = await request.json();
+    const body = await request.json();
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Request body must be a listing object.' }, { status: 400 });
+    }
+
     const existing = await readJsonFile('listings.json');
     const listings = Array.isArray(existing) ? existing : [];
+
+    const incomingId = String(
+      (body as Record<string, unknown>).listing_id ?? (body as Record<string, unknown>).id ?? '',
+    );
+    const collides = listings.some((record) => {
+      if (!record || typeof record !== 'object') return false;
+      const id = String((record as Record<string, unknown>).listing_id ?? (record as Record<string, unknown>).id ?? '');
+      return id !== '' && id === incomingId;
+    });
+    if (incomingId && collides) {
+      return NextResponse.json(
+        { error: `A listing with id ${incomingId} already exists.` },
+        { status: 409 },
+      );
+    }
+
+    // listing_status is never trusted from the client: this endpoint only ever
+    // publishes new active listings, so a POST body can't be used to smuggle a
+    // listing back into the catalogue under a status a moderator already revoked.
+    const newListing = { ...(body as Record<string, unknown>), listing_status: 'active' };
 
     listings.push(newListing);
     await writeJsonFile('listings.json', listings);

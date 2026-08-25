@@ -48,7 +48,7 @@ export default function AccountMenu() {
     return (
       <Link
         href="/login"
-        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors shrink-0"
+        className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors shrink-0"
       >
         <LogIn size={15} />
         <span className="hidden sm:inline">Sign in</span>
@@ -58,15 +58,15 @@ export default function AccountMenu() {
 
   return (
     <div className="flex items-center gap-2 shrink-0">
-      <span className="hidden md:flex items-center gap-1.5 text-sm text-slate-300 max-w-[12rem] truncate">
-        <UserRound size={15} className="text-slate-500 shrink-0" />
+      <span className="hidden md:flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 max-w-[12rem] truncate">
+        <UserRound size={15} className="text-slate-500 dark:text-slate-500 shrink-0" />
         {customer.customer_name ?? customer.customer_id}
       </span>
       <button
         type="button"
         onClick={signOut}
         title={`Sign out of ${customer.customer_id}`}
-        className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
       >
         <LogOut size={15} />
         <span className="sr-only">Sign out</span>

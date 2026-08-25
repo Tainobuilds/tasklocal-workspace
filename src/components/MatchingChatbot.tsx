@@ -346,12 +346,12 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
             </div>
 
             {msg.structured && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 mt-2 w-full bg-teal-50/60 border border-teal-100 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-teal-700 uppercase tracking-wide mb-1.5">
+              <div className="animate-in fade-in slide-in-from-bottom-2 mt-2 w-full bg-teal-50/60 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-teal-700 dark:text-teal-400 uppercase tracking-wide mb-1.5">
                   <Sparkles size={11} /> Parsed Intent
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[11px] font-medium text-teal-700 bg-white dark:bg-slate-900 border border-teal-200 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-medium text-teal-700 dark:text-teal-400 bg-white dark:bg-slate-900 border border-teal-200 dark:border-teal-800/50 px-2 py-0.5 rounded-full">
                     Category: {msg.structured.category}
                   </span>
                   <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-full">
