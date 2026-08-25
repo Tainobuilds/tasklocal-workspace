@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { readJsonFile, writeJsonFile } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
+import { supabase } from '@/lib/supabase';
 
 const ALLOWED = ['cancelled', 'completed'] as const;
 
@@ -29,19 +29,16 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/bookings/[
       );
     }
 
-    const raw = await readJsonFile('bookings.json');
-    if (!Array.isArray(raw)) {
-      return NextResponse.json({ error: 'Booking data is unavailable.' }, { status: 500 });
-    }
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .maybeSingle();
 
-    const index = raw.findIndex(
-      (record) => record && typeof record === 'object' && record.booking_id === bookingId,
-    );
-    if (index === -1) {
+    if (fetchError) throw fetchError;
+    if (!booking) {
       return NextResponse.json({ error: 'No such booking.' }, { status: 404 });
     }
-
-    const booking = raw[index];
 
     // A customer may only act on their own bookings.
     if (booking.customer_id !== customerId) {
@@ -81,11 +78,16 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/bookings/[
       );
     }
 
-    const next = [...raw];
-    next[index] = { ...booking, booking_status: status };
-    await writeJsonFile('bookings.json', next);
+    const { data: updated, error: updateError } = await supabase
+      .from('bookings')
+      .update({ booking_status: status })
+      .eq('booking_id', bookingId)
+      .select()
+      .single();
 
-    return NextResponse.json({ success: true, booking: next[index] });
+    if (updateError) throw updateError;
+
+    return NextResponse.json({ success: true, booking: updated });
   } catch (error) {
     console.error('[tasklocal] Failed to update booking:', error);
     return NextResponse.json({ error: 'Could not update the booking.' }, { status: 500 });
