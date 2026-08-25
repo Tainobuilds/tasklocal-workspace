@@ -96,9 +96,13 @@ export default function ChatPage() {
   const [pending, setPending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // `block: 'end'` plus the bottom padding on <main> keeps the newest reply
+  // clear of the sticky input bar. Without both, the reply scrolls to just
+  // underneath the bar and looks truncated.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [turns, pending]);
+
 
   async function send(message: string) {
     const trimmed = message.trim();
@@ -181,7 +185,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-6">
+      <main className="flex-1 w-full max-w-3xl mx-auto px-6 pt-6 pb-28">
         {turns.length === 0 ? (
           <div className="mt-10 text-center">
             <p className="text-slate-600 dark:text-slate-400">

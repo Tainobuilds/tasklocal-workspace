@@ -28,7 +28,7 @@ export const INTENT_MODEL = 'claude-sonnet-4-6';
  * Logged with every turn: without it, comparing rankings across a prompt
  * change is meaningless, because the intents behind them are not comparable.
  */
-export const PROMPT_VERSION = 'intent-v1';
+export const PROMPT_VERSION = 'intent-v2';
 
 /**
  * Refused rather than truncated. Silently cutting a long message would log an
@@ -104,6 +104,8 @@ const SYSTEM_PROMPT = [
   'Fill exactly these four fields:',
   '',
   `service_type - one of: ${SERVICE_TYPES.join(', ')}. Use null if the message does not ask for one of these, even when the request is a real job. Do not stretch a request to fit a category.`,
+  '',
+  'If one message asks for work spanning more than one of those categories ("clean out my garage and move some boxes" is both cleaning and moving), service_type is null. This field is single-valued, so picking one category silently discards the other half of the request; leaving it null lets the keywords carry both.',
   '',
   'max_price - a number, only when the message states an upper price ("under $80", "no more than 100"). NEVER infer one. "cheap", "affordable", "budget", "not too expensive" and "as low as possible" all mean null. Inventing a number that was not stated is the worst error you can make here.',
   '',
