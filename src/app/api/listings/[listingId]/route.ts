@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { supabase } from '@/lib/supabase';
 
 const LISTING_STATUSES = ['active', 'flagged', 'removed'] as const;
 
@@ -23,26 +23,19 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/listings/[
       );
     }
 
-    const raw = await readJsonFile('listings.json');
-    if (!Array.isArray(raw)) {
-      return NextResponse.json({ error: 'Listing data is unavailable.' }, { status: 500 });
-    }
+    const { data, error } = await supabase
+      .from('listings')
+      .update({ listing_status: status })
+      .eq('listing_id', listingId)
+      .select();
 
-    // Duplicate listing_ids exist in the data; moderating one copy and not the
-    // other would leave a withdrawn listing reachable through its twin.
-    let updated = 0;
-    const next = raw.map((record) => {
-      if (!record || typeof record !== 'object' || record.listing_id !== listingId) return record;
-      updated += 1;
-      return { ...record, listing_status: status };
-    });
+    if (error) throw error;
 
-    if (updated === 0) {
+    if (!data || data.length === 0) {
       return NextResponse.json({ error: `No listing found with id ${listingId}.` }, { status: 404 });
     }
 
-    await writeJsonFile('listings.json', next);
-    return NextResponse.json({ success: true, listingId, listing_status: status, updated });
+    return NextResponse.json({ success: true, listingId, listing_status: status, updated: data.length });
   } catch (error) {
     console.error('[tasklocal] Failed to update listing status:', error);
     return NextResponse.json({ error: 'Could not update the listing.' }, { status: 500 });
