@@ -8,7 +8,7 @@
 
 import { findBookingConflict, slotInterval } from './scheduling';
 import { buildListingIndex, PERIOD_HOURS, slotKey } from './sanitize';
-import { getCatalogue, readJsonFile, readListings } from './server-data';
+import { getCatalogue, readBookings, readJsonFile, readListings } from './server-data';
 import { WEEKDAYS, type CleanListing, type Period, type Weekday } from './types';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -85,7 +85,7 @@ export async function guardSlot(
   const [rawListings, rawProviders, rawBookings] = await Promise.all([
     readListings(),
     readJsonFile('providers.json'),
-    readJsonFile('bookings.json'),
+    readBookings(),
   ]);
 
   const providerListingIds = new Set<string>();
