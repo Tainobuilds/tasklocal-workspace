@@ -15,6 +15,7 @@ import {
   sanitizeProviders,
 } from './sanitize';
 import { getSessionCustomerId } from './session';
+import { supabase } from './supabase';
 import { buildTriageData, type TriageData } from './trust-safety';
 import type {
   BookingsResult,
@@ -47,6 +48,20 @@ export async function writeJsonFile(filename: string, value: unknown): Promise<v
 }
 
 /**
+ * Reads all listings from Supabase. Mirrors readJsonFile's contract: a
+ * broken or empty source degrades to an empty array rather than throwing,
+ * so every page that already handles an empty catalogue continues to.
+ */
+export async function readListings(): Promise<unknown[]> {
+  const { data, error } = await supabase.from('listings').select('*');
+  if (error) {
+    console.error('[tasklocal] Could not read listings from Supabase:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
  * Rolls provider ratings up from the review file.
  *
  * Every loader below passes this into the sanitizers, so provider scores shown
@@ -68,7 +83,7 @@ async function loadProviderRatings(): Promise<Map<string, ProviderRatingRollup>>
 export async function getCatalogue(): Promise<ListingsResult> {
   try {
     const [rawListings, rawProviders, derivedRatings] = await Promise.all([
-      readJsonFile('listings.json'),
+      readListings(),
       readJsonFile('providers.json'),
       loadProviderRatings(),
     ]);
@@ -107,7 +122,7 @@ export async function getCustomerBookings(customerId: string): Promise<BookingsR
   try {
     const [rawBookings, rawListings, rawProviders, derivedRatings] = await Promise.all([
       readJsonFile('bookings.json'),
-      readJsonFile('listings.json'),
+      readListings(),
       readJsonFile('providers.json'),
       loadProviderRatings(),
     ]);
@@ -155,7 +170,7 @@ export async function getTriageData(): Promise<TriageData> {
   try {
     const [rawReports, rawListings, rawProviders, rawBookings, derivedRatings] = await Promise.all([
       readJsonFile('reports.json'),
-      readJsonFile('listings.json'),
+      readListings(),
       readJsonFile('providers.json'),
       readJsonFile('bookings.json'),
       loadProviderRatings(),
@@ -328,7 +343,7 @@ export async function getProviderDetail(providerId: string): Promise<ProviderDet
   try {
     const [rawProviders, rawListings, rawReviews] = await Promise.all([
       readJsonFile('providers.json'),
-      readJsonFile('listings.json'),
+      readListings(),
       readJsonFile('reviews.json'),
     ]);
 

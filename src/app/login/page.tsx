@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
   const [customers, currentId] = await Promise.all([getCustomers(), getSessionCustomerId()]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="dark min-h-screen bg-slate-950 text-slate-100 font-sans">
       <SiteHeader active="customer" />
 
       <main className="max-w-md mx-auto px-6 py-16">

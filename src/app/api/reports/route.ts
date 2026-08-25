@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { readJsonFile, readListings, writeJsonFile } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
 import {
   CUSTOMER_REPORT_CATEGORIES,
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       return !Number.isFinite(filedMs) || filedMs >= cutoffMs;
     });
 
-    const rawListings = await readJsonFile('listings.json');
+    const rawListings = (await readListings()) as unknown;
     const listing = Array.isArray(rawListings)
       ? rawListings.find((record) => record && typeof record === 'object' && record.listing_id === listingId)
       : null;

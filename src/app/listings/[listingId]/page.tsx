@@ -43,7 +43,7 @@ export default async function ListingPage({ params }: PageProps<'/listings/[list
   const provider = listing.provider;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="dark min-h-screen bg-slate-950 text-slate-100 font-sans">
       <SiteHeader active="customer" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
