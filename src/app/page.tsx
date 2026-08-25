@@ -87,6 +87,7 @@ function HomeTabs() {
   const activeTabRef = useRef(activeTab);
 
   const [catalogueListings, setCatalogueListings] = useState<any[]>([]);
+  const [realBookings, setRealBookings] = useState<any[]>([]);
 
   // Hydrate the shared bookings ledger from localStorage on mount.
   useEffect(() => {
@@ -190,6 +191,25 @@ function HomeTabs() {
     return () => clearInterval(interval);
   }, []);
 
+  // Independent poll so the Provider Dashboard can show real customer
+  // bookings made on /browse — separate from the localStorage ledger above,
+  // which is a different, unrelated booking system fed by the AI Matcher.
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch('/api/bookings');
+        const data = await res.json();
+        setRealBookings(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchBookings();
+    const interval = setInterval(fetchBookings, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Owns the actual data mutation (optimistic update, POST, reconciliation,
   // toast) while ProviderDashboard owns the "Create New Listing" form/modal UI.
   const createListing = async (formData: { title: string; service_type: string; price: string; description: string }) => {
@@ -242,7 +262,7 @@ function HomeTabs() {
             isInitialLoading ? (
               <ProviderDashboardSkeleton />
             ) : (
-              <ProviderDashboard listings={listings} bookings={bookings} onCreateListing={createListing} />
+              <ProviderDashboard listings={listings} bookings={bookings} realBookings={realBookings} onCreateListing={createListing} />
             )
           ) : isInitialLoading ? (
             <MatchingChatbotSkeleton />
