@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { coerceReviewRating } from '@/lib/reviews';
-import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { readJsonFile, readListings, writeJsonFile } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
 
 function nextReviewId(existing: unknown): string {
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       review_date: new Date().toISOString().slice(0, 10),
     };
 
-    const rawListings = await readJsonFile('listings.json');
+    const rawListings = (await readListings()) as unknown;
     if (Array.isArray(rawListings) && review.listing_id) {
       const listing = rawListings.find(
         (record) => record && typeof record === 'object' && record.listing_id === review.listing_id,
