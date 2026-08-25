@@ -77,25 +77,25 @@ const hashString = (str: string) => {
 
 const getRating = (item: any) => {
   if (typeof item.rating === 'number') return item.rating.toFixed(1);
-  const seed = hashString(String(item.listing_id || item.id || item.title || item.name || 'service'));
+  const seed = hashString(String(item.listing_id || item.title || 'service'));
   return (4.4 + (seed % 6) / 10).toFixed(1);
 };
 
 const getResponseTime = (item: any) => {
   if (item.response_time) return item.response_time;
-  const seed = hashString(`${item.listing_id || item.id || item.title || item.name || 'service'}-rt`);
+  const seed = hashString(`${item.listing_id || item.title || 'service'}-rt`);
   return 5 + (seed % 5) * 5;
 };
 
 const getVerified = (item: any) => {
   if (typeof item.verified === 'boolean') return item.verified;
-  const seed = hashString(`${item.listing_id || item.id || item.title || item.name || 'service'}-verified`);
+  const seed = hashString(`${item.listing_id || item.title || 'service'}-verified`);
   return seed % 5 !== 0; // ~80% of pros are Verified
 };
 
 const getAvailableToday = (item: any) => {
   if (typeof item.available_today === 'boolean') return item.available_today;
-  const seed = hashString(`${item.listing_id || item.id || item.title || item.name || 'service'}-avail`);
+  const seed = hashString(`${item.listing_id || item.title || 'service'}-avail`);
   return seed % 3 !== 0; // ~66% available today
 };
 
@@ -145,7 +145,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
     items.filter((item) => {
       if (activeFilters.availableToday && !getAvailableToday(item)) return false;
       if (activeFilters.under60) {
-        const price = item.price_per_hour || item.price || item.rate || 0;
+        const price = item.price || 0;
         if (price >= 60) return false;
       }
       if (activeFilters.topRated && parseFloat(getRating(item)) < 4.8) return false;
@@ -159,7 +159,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       ? listings
       : listings.filter((item) => {
           const name = item.title || item.name || item.service_name || '';
-          const cat = item.category || item.service_type || item.type || '';
+          const cat = item.service_type || '';
           const desc = item.description || item.details || '';
           const catLower = cat.toLowerCase();
 
@@ -272,7 +272,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
 
       onBookingConfirmed?.({
         title,
-        category: bookingListing?.category || bookingListing?.service_type || bookingListing?.type || 'General',
+        category: bookingListing?.service_type || 'General',
         hours: bookingHours,
         hourlyRate,
         serviceFee: SERVICE_FEE,
@@ -284,7 +284,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
     }, 700);
   };
 
-  const hourlyRate = bookingListing ? bookingListing.price_per_hour || bookingListing.price || bookingListing.rate || 0 : 0;
+  const hourlyRate = bookingListing ? bookingListing.price || 0 : 0;
   const bookingSubtotal = hourlyRate * bookingHours;
   const bookingTotal = bookingSubtotal + SERVICE_FEE;
   const bookingTitle = bookingListing?.title || bookingListing?.name || bookingListing?.service_name || 'Service';
@@ -401,7 +401,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                 <div className="mt-3 w-full space-y-2">
                   {filteredMatches.map((item, matchIdx) => {
                     const title = item.title || item.name || item.service_name || 'Service';
-                    const price = item.price_per_hour || item.price || item.rate || 0;
+                    const price = item.price || 0;
                     const rating = getRating(item);
                     const responseTime = getResponseTime(item);
                     const verified = getVerified(item);
@@ -418,7 +418,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
                             <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full">
-                              {item.category || item.service_type || 'General'}
+                              {item.service_type || 'General'}
                             </span>
                             <span className="flex items-center gap-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full">
                               <Star size={10} className="fill-amber-400 text-amber-400" /> {rating}

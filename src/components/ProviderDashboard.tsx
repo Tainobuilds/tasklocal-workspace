@@ -57,7 +57,7 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
   const activeServicesCount = listings.filter((item) => (item.listing_status ?? 'active') === 'active').length;
   const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
   const validRates = listings
-    .map((item) => item.price_per_hour ?? item.price ?? item.rate)
+    .map((item) => item.price)
     .filter((rate) => typeof rate === 'number' && Number.isFinite(rate));
   const averageHourlyRate = validRates.length ? validRates.reduce((sum, rate) => sum + rate, 0) / validRates.length : null;
 
@@ -128,9 +128,9 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {listings.map((item, idx) => {
-            const title = item.title || item.name || item.service_name || 'Unnamed Service';
-            const category = item.category || item.service_type || item.type || 'General';
-            const rate = item.price_per_hour ?? item.price ?? item.rate;
+            const title = item.title || 'Unnamed Service';
+            const category = item.service_type || 'General';
+            const rate = item.price;
             const hasValidRate = typeof rate === 'number' && Number.isFinite(rate);
             const description = item.description || item.details || 'No description available.';
             const status = (item.listing_status ?? 'active') as string;
