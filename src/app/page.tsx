@@ -198,7 +198,6 @@ function HomeTabs() {
       title: formData.title,
       service_type: formData.service_type,
       price: Number(formData.price) || 0,
-      price_per_hour: Number(formData.price) || 0,
       description: formData.description || 'No description provided.',
       listing_status: 'active'
     };
