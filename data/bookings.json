@@ -158,5 +158,14 @@
     "booking_status": "confirmed",
     "address": "9 Kingsbridge Ter, Bronx, NY 10463",
     "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_618",
+    "listing_id": "list_104",
+    "customer_id": "cust_00042",
+    "scheduled_at": "2026-09-18T14:00:00Z",
+    "booking_status": "confirmed",
+    "address": "412 Willow St, Apt 3R, Brooklyn, NY 11211",
+    "payment_intent_id": null
   }
 ]
