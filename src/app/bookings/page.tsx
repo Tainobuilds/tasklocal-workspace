@@ -71,7 +71,7 @@ export default async function BookingsPage() {
   ].filter((section) => section.items.length > 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="dark min-h-screen bg-slate-950 text-slate-100 font-sans">
       <SiteHeader active="customer" />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
