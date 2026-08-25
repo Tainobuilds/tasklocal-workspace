@@ -62,6 +62,19 @@ export async function readListings(): Promise<unknown[]> {
 }
 
 /**
+ * Reads all bookings from Supabase. Mirrors readListings()'s contract: a
+ * broken or empty source degrades to an empty array rather than throwing.
+ */
+export async function readBookings(): Promise<unknown[]> {
+  const { data, error } = await supabase.from('bookings').select('*');
+  if (error) {
+    console.error('[tasklocal] Could not read bookings from Supabase:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
  * Rolls provider ratings up from the review file.
  *
  * Every loader below passes this into the sanitizers, so provider scores shown
@@ -121,7 +134,7 @@ export async function getCatalogue(): Promise<ListingsResult> {
 export async function getCustomerBookings(customerId: string): Promise<BookingsResult> {
   try {
     const [rawBookings, rawListings, rawProviders, derivedRatings] = await Promise.all([
-      readJsonFile('bookings.json'),
+      readBookings(),
       readListings(),
       readJsonFile('providers.json'),
       loadProviderRatings(),
@@ -172,7 +185,7 @@ export async function getTriageData(): Promise<TriageData> {
       readJsonFile('reports.json'),
       readListings(),
       readJsonFile('providers.json'),
-      readJsonFile('bookings.json'),
+      readBookings(),
       loadProviderRatings(),
     ]);
 
@@ -277,7 +290,7 @@ export async function getReviewableBookingForListing(
 ): Promise<string | null> {
   try {
     const [rawBookings, rawReviews] = await Promise.all([
-      readJsonFile('bookings.json'),
+      readBookings(),
       readJsonFile('reviews.json'),
     ]);
     if (!Array.isArray(rawBookings)) return null;
@@ -288,7 +301,7 @@ export async function getReviewableBookingForListing(
         .map((review) => review.booking_id as string),
     );
 
-    const match = rawBookings.find(
+    const match = (rawBookings as Record<string, unknown>[]).find(
       (record) =>
         record &&
         typeof record === 'object' &&

@@ -7,6 +7,7 @@ import { SERVICE_TYPES } from '@/lib/types';
 interface Props {
   listings: any[];
   bookings: any[];
+  realBookings: any[];
   onCreateListing: (formData: { title: string; service_type: string; price: string; description: string }) => Promise<boolean>;
 }
 
@@ -25,7 +26,7 @@ const getListingStrength = (formData: typeof EMPTY_FORM) => {
   return { score, label: 'Weak', barClass: 'bg-red-400', textClass: 'text-red-600' };
 };
 
-export default function ProviderDashboard({ listings, bookings, onCreateListing }: Props) {
+export default function ProviderDashboard({ listings, bookings, realBookings, onCreateListing }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -168,6 +169,37 @@ export default function ProviderDashboard({ listings, bookings, onCreateListing 
               </div>
             );
           })}
+        </div>
+      )}
+
+      {realBookings.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Customer Bookings</h2>
+          <div className="space-y-2">
+            {realBookings.map((booking, idx) => {
+              const listing = listings.find((item) => item.listing_id === booking.listing_id);
+              const listingTitle = listing?.title || booking.listing_id || 'Unknown service';
+              const status = typeof booking.booking_status === 'string' ? booking.booking_status : 'confirmed';
+              const statusClassName =
+                status === 'cancelled'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : status === 'completed'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+              return (
+                <div
+                  key={booking.booking_id || idx}
+                  className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5"
+                >
+                  <span className="text-sm text-slate-900 dark:text-slate-100 truncate">{listingTitle}</span>
+                  <span className={`text-[11px] font-medium border px-2 py-0.5 rounded-full shrink-0 ${statusClassName}`}>
+                    {status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 
 import { guardSlot } from '@/lib/booking-guard';
-import { readJsonFile, writeJsonFile } from '@/lib/server-data';
+import { readBookings } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
-
-function nextBookingId(existing: unknown): string {
-  const count = Array.isArray(existing) ? existing.length : 0;
-  return `book_${600 + count}`;
-}
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
-  const bookings = await readJsonFile('bookings.json');
-  return NextResponse.json(Array.isArray(bookings) ? bookings : []);
+  const bookings = await readBookings();
+  return NextResponse.json(bookings);
 }
 
 /**
@@ -44,11 +40,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: guard.error }, { status: guard.status });
     }
 
-    const existing = await readJsonFile('bookings.json');
-    const bookings = Array.isArray(existing) ? existing : [];
-
     const booking = {
-      booking_id: nextBookingId(bookings),
+      booking_id: `book-${Date.now()}`,
       listing_id: guard.listing.listing_id,
       customer_id: customerId,
       scheduled_at: guard.scheduledAt,
@@ -57,10 +50,10 @@ export async function POST(request: Request) {
       payment_intent_id: typeof body.payment_intent_id === 'string' ? body.payment_intent_id : null,
     };
 
-    bookings.push(booking);
-    await writeJsonFile('bookings.json', bookings);
+    const { data, error } = await supabase.from('bookings').insert(booking).select().single();
+    if (error) throw error;
 
-    return NextResponse.json({ success: true, booking });
+    return NextResponse.json({ success: true, booking: data });
   } catch (error) {
     console.error('[tasklocal] Booking creation failed:', error);
     return NextResponse.json({ error: 'Could not create the booking.' }, { status: 500 });

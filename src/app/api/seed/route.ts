@@ -15,7 +15,7 @@ const SEED_LISTINGS = [
     service_type: 'cleaning',
     description: 'Light dusting, vacuuming, and kitchen wipe-down',
     price: 75,
-    availability: [{ day: 'Tue', period: 'AM' }, { day: 'Thu', period: 'AM' }],
+    availability: ['Tue AM', 'Thu AM'],
     listing_status: 'active',
   },
   {
@@ -25,7 +25,7 @@ const SEED_LISTINGS = [
     service_type: 'handyman',
     description: 'Fix or replace kitchen and bathroom faucets',
     price: 60,
-    availability: [{ day: 'Mon', period: 'PM' }, { day: 'Fri', period: 'AM' }],
+    availability: ['Mon PM', 'Fri AM'],
     listing_status: 'active',
   },
   {
@@ -35,7 +35,7 @@ const SEED_LISTINGS = [
     service_type: 'moving',
     description: 'Load, transport, and unload within 10 miles',
     price: 200,
-    availability: [{ day: 'Sat', period: 'AM' }],
+    availability: ['Sat AM'],
     listing_status: 'active',
   },
   {
@@ -45,7 +45,7 @@ const SEED_LISTINGS = [
     service_type: 'moving',
     description: 'Two movers, one truck, up to 3 hours',
     price: 150,
-    availability: [{ day: 'Sat', period: 'PM' }],
+    availability: ['Sat PM'],
     listing_status: 'flagged',
   },
 ];

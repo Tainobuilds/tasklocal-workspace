@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { coerceReviewRating } from '@/lib/reviews';
-import { readJsonFile, readListings, writeJsonFile } from '@/lib/server-data';
+import { readBookings, readJsonFile, readListings, writeJsonFile } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
 
 function nextReviewId(existing: unknown): string {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const rawBookings = await readJsonFile('bookings.json');
+    const rawBookings = (await readBookings()) as unknown;
     if (!Array.isArray(rawBookings)) {
       return NextResponse.json({ error: 'Booking data is unavailable.' }, { status: 500 });
     }
