@@ -18,6 +18,10 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Service temporarily unavailable — Supabase is not configured.' }, { status: 503 });
+    }
+
     // Attribution comes from the session cookie, never the request body, so a
     // booking cannot be filed against another customer.
     const customerId = await getSessionCustomerId();

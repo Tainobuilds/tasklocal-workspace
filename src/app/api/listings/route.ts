@@ -27,6 +27,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Service temporarily unavailable — Supabase is not configured.' }, { status: 503 });
+    }
+
     const body = await request.json();
     if (!body || typeof body !== 'object') {
       return NextResponse.json({ error: 'Request body must be a listing object.' }, { status: 400 });

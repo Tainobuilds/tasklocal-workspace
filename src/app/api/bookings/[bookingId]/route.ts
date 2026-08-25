@@ -13,6 +13,10 @@ const ALLOWED = ['cancelled', 'completed'] as const;
  */
 export async function PATCH(request: Request, ctx: RouteContext<'/api/bookings/[bookingId]'>) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Service temporarily unavailable — Supabase is not configured.' }, { status: 503 });
+    }
+
     const customerId = await getSessionCustomerId();
     if (!customerId) {
       return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });

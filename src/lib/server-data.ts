@@ -53,6 +53,8 @@ export async function writeJsonFile(filename: string, value: unknown): Promise<v
  * so every page that already handles an empty catalogue continues to.
  */
 export async function readListings(): Promise<unknown[]> {
+  if (!supabase) return [];
+
   const { data, error } = await supabase.from('listings').select('*');
   if (error) {
     console.error('[tasklocal] Could not read listings from Supabase:', error);
@@ -66,6 +68,8 @@ export async function readListings(): Promise<unknown[]> {
  * broken or empty source degrades to an empty array rather than throwing.
  */
 export async function readBookings(): Promise<unknown[]> {
+  if (!supabase) return [];
+
   const { data, error } = await supabase.from('bookings').select('*');
   if (error) {
     console.error('[tasklocal] Could not read bookings from Supabase:', error);
