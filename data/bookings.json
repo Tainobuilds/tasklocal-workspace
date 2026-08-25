@@ -167,5 +167,23 @@
     "booking_status": "confirmed",
     "address": "412 Willow St, Apt 3R, Brooklyn, NY 11211",
     "payment_intent_id": null
+  },
+  {
+    "booking_id": "book_619",
+    "listing_id": "list-seed-001",
+    "customer_id": "cust_00050",
+    "scheduled_at": "2026-09-10T09:00:00Z",
+    "booking_status": "cancelled",
+    "address": "41 56 theheh",
+    "payment_intent_id": "pi_3U8QRv6nRHaz6YnF0LGuYpUX"
+  },
+  {
+    "booking_id": "book_620",
+    "listing_id": "list-seed-003",
+    "customer_id": "cust_00050",
+    "scheduled_at": "2026-09-12T09:00:00Z",
+    "booking_status": "confirmed",
+    "address": "4f5f",
+    "payment_intent_id": "pi_3U8QUE6nRHaz6YnF1i5p1QS2"
   }
 ]
