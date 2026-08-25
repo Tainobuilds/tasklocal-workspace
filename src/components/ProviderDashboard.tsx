@@ -1,17 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge } from 'lucide-react';
+import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge, Pencil } from 'lucide-react';
 import { SERVICE_TYPES } from '@/lib/types';
+import AvailabilitySelector from './AvailabilitySelector';
+
+type ListingFormData = {
+  title: string;
+  service_type: string;
+  price: string;
+  description: string;
+  availability: string[];
+};
 
 interface Props {
   listings: any[];
   bookings: any[];
   realBookings: any[];
-  onCreateListing: (formData: { title: string; service_type: string; price: string; description: string }) => Promise<boolean>;
+  onCreateListing: (formData: ListingFormData) => Promise<boolean>;
+  onEditListing: (listingId: string, formData: ListingFormData) => Promise<boolean>;
 }
 
-const EMPTY_FORM = { title: '', service_type: '', price: '', description: '' };
+const EMPTY_FORM: ListingFormData = { title: '', service_type: '', price: '', description: '', availability: [] };
+
+/** Defensively builds edit-form state from a listing that may predate this
+ * feature (no availability field, or a malformed one) — never throws. */
+const toFormData = (item: any): ListingFormData => ({
+  title: typeof item?.title === 'string' ? item.title : '',
+  service_type: typeof item?.service_type === 'string' ? item.service_type : '',
+  price: typeof item?.price === 'number' && Number.isFinite(item.price) ? String(item.price) : '',
+  description: typeof item?.description === 'string' ? item.description : '',
+  availability: Array.isArray(item?.availability) ? item.availability.filter((s: unknown) => typeof s === 'string') : [],
+});
 
 const getListingStrength = (formData: typeof EMPTY_FORM) => {
   let score = 0;
@@ -26,15 +46,48 @@ const getListingStrength = (formData: typeof EMPTY_FORM) => {
   return { score, label: 'Weak', barClass: 'bg-red-400', textClass: 'text-red-600' };
 };
 
-export default function ProviderDashboard({ listings, bookings, realBookings, onCreateListing }: Props) {
+export default function ProviderDashboard({ listings, bookings, realBookings, onCreateListing, onEditListing }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [editingListingId, setEditingListingId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<ListingFormData>(EMPTY_FORM);
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [editSubmitError, setEditSubmitError] = useState<string | null>(null);
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSubmitError(null);
+  };
+
+  const openEditModal = (item: any) => {
+    setEditingListingId(item.listing_id);
+    setEditFormData(toFormData(item));
+    setEditSubmitError(null);
+  };
+
+  const closeEditModal = () => {
+    setEditingListingId(null);
+    setEditSubmitError(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingListingId || !editFormData.title || isEditSubmitting) return;
+
+    setIsEditSubmitting(true);
+    setEditSubmitError(null);
+
+    const success = await onEditListing(editingListingId, editFormData);
+
+    if (success) {
+      closeEditModal();
+    } else {
+      setEditSubmitError('Something went wrong saving these changes. Please try again.');
+    }
+    setIsEditSubmitting(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,6 +219,14 @@ export default function ProviderDashboard({ listings, bookings, realBookings, on
                   )}
                 </div>
                 <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{description}</p>
+                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                  <button
+                    onClick={() => openEditModal(item)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-md px-2 py-1"
+                  >
+                    <Pencil size={13} /> Edit
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -261,6 +322,11 @@ export default function ProviderDashboard({ listings, bookings, realBookings, on
                 />
               </div>
 
+              <AvailabilitySelector
+                value={formData.availability}
+                onChange={(slots) => setFormData({ ...formData, availability: slots })}
+              />
+
               {/* Listing Strength Meter */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -294,6 +360,88 @@ export default function ProviderDashboard({ listings, bookings, realBookings, on
                   </>
                 ) : (
                   'Save & Add Listing'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Listing Modal */}
+      {editingListingId && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
+            <button onClick={closeEditModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100">Edit Listing</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Service Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  placeholder="e.g., Deep Apartment Cleaning"
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                  <select
+                    value={editFormData.service_type}
+                    onChange={(e) => setEditFormData({ ...editFormData, service_type: e.target.value })}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                  >
+                    <option value="">Select a category</option>
+                    {SERVICE_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type[0].toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    value={editFormData.price}
+                    onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
+                    placeholder="45"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  placeholder="Briefly describe the service..."
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 resize-none"
+                />
+              </div>
+
+              <AvailabilitySelector
+                value={editFormData.availability}
+                onChange={(slots) => setEditFormData({ ...editFormData, availability: slots })}
+              />
+
+              {editSubmitError && <p className="text-xs text-red-600">{editSubmitError}</p>}
+              <button
+                type="submit"
+                disabled={isEditSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                {isEditSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Saving...
+                  </>
+                ) : (
+                  'Save Changes'
                 )}
               </button>
             </form>
