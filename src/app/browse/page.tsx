@@ -21,7 +21,7 @@ export default async function BrowsePage() {
   const { bookings } = customer ? await getCustomerBookings(customer.customer_id) : { bookings: [] };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       <WorkspaceHeader active="customer" bookingsBadgeCount={bookings.length} bookingsHref="/bookings" />
       <main className="max-w-6xl mx-auto px-6 py-8">
         <CustomerNav active="browse" />

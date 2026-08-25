@@ -58,16 +58,19 @@ export default function ListingCard({ listing, onBook }: Props) {
     // stops the click so it can still open the flow directly.
     <Link
       href={`/listings/${listing.listing_id}`}
-      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all focus:outline-none focus-visible:border-teal-500"
+      className="group bg-brand-surface dark:bg-slate-900 border border-brand-border dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:border-brand-accent"
     >
       <div className="flex justify-between items-start gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+        <span className="text-xs font-semibold uppercase tracking-wider bg-slate-50 dark:bg-slate-950 text-brand-primary dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-2.5 py-0.5 rounded-full whitespace-nowrap">
           {SERVICE_LABELS[listing.service_type]}
         </span>
         {listing.price === null ? (
           <span className="text-sm text-slate-500 italic whitespace-nowrap">Price unavailable</span>
         ) : (
-          <span className="font-bold text-emerald-400 whitespace-nowrap">{formatUsd(listing.price)}</span>
+          <span className="whitespace-nowrap">
+            <span className="font-bold text-xl text-brand-primary dark:text-emerald-400">{formatUsd(listing.price)}</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">/hr</span>
+          </span>
         )}
       </div>
 
@@ -100,7 +103,7 @@ export default function ListingCard({ listing, onBook }: Props) {
             {listing.availability.map((slot) => (
               <span
                 key={slotKey(slot)}
-                className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md"
+                className="text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full"
               >
                 {slotKey(slot)}
               </span>
@@ -120,7 +123,7 @@ export default function ListingCard({ listing, onBook }: Props) {
         }}
         disabled={blocked !== null}
         title={blocked ?? undefined}
-        className="mt-2 w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
+        className="mt-2 w-full bg-brand-primary hover:opacity-90 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:opacity-100 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-all"
       >
         {blocked ? `Unavailable — ${blocked}` : 'Book'}
       </button>

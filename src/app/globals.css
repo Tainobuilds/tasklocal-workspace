@@ -5,6 +5,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Spruce brand palette */
+  --brand-primary: #0f382c;
+  --brand-accent: #d97706;
+  --brand-background: #f9f8f6;
+  --brand-surface: #ffffff;
+  --brand-border: #e5e7eb;
 }
 
 @theme inline {
@@ -12,6 +19,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-background: var(--brand-background);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-border: var(--brand-border);
 }
 
 body {
