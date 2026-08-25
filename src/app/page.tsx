@@ -212,13 +212,20 @@ function HomeTabs() {
 
   // Owns the actual data mutation (optimistic update, POST, reconciliation,
   // toast) while ProviderDashboard owns the "Create New Listing" form/modal UI.
-  const createListing = async (formData: { title: string; service_type: string; price: string; description: string }) => {
+  const createListing = async (formData: {
+    title: string;
+    service_type: string;
+    price: string;
+    description: string;
+    availability: string[];
+  }) => {
     const newEntry = {
       listing_id: `list-${Date.now()}`,
       title: formData.title,
       service_type: formData.service_type,
       price: Number(formData.price) || 0,
       description: formData.description || 'No description provided.',
+      availability: formData.availability,
       listing_status: 'active'
     };
 
@@ -244,6 +251,38 @@ function HomeTabs() {
     }
   };
 
+  // Provider-initiated edit of an existing listing's details. Unlike
+  // createListing, no optimistic update — the field set being changed is
+  // small and a brief round-trip delay before the card refreshes is an
+  // acceptable trade for not having to reconcile a partial local guess.
+  const editListing = async (
+    listingId: string,
+    formData: { title: string; service_type: string; price: string; description: string; availability: string[] },
+  ) => {
+    try {
+      const res = await fetch(`/api/listings/${listingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          service_type: formData.service_type,
+          price: Number(formData.price) || 0,
+          description: formData.description || 'No description provided.',
+          availability: formData.availability,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update listing');
+
+      await fetchListings();
+      showToast('Listing updated.');
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       <WorkspaceHeader
@@ -262,7 +301,13 @@ function HomeTabs() {
             isInitialLoading ? (
               <ProviderDashboardSkeleton />
             ) : (
-              <ProviderDashboard listings={listings} bookings={bookings} realBookings={realBookings} onCreateListing={createListing} />
+              <ProviderDashboard
+                listings={listings}
+                bookings={bookings}
+                realBookings={realBookings}
+                onCreateListing={createListing}
+                onEditListing={editListing}
+              />
             )
           ) : isInitialLoading ? (
             <MatchingChatbotSkeleton />
