@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { CalendarClock, Sparkles } from 'lucide-react';
 
 import type { Intent, Match } from '@/lib/chat/types';
@@ -14,8 +15,14 @@ import { formatUsd } from '@/lib/pricing';
  * visually — same shell, same teal accent, same slot chips, both themes — so
  * that swapping to a genuinely shared card later is a small change.
  *
- * This card takes no action props on purpose. Product C matches and nothing
- * else: no booking, no navigation, no browsing.
+ * The whole card links to Product B's listing detail page at
+ * `/listings/[listingId]`, using the same base and hover/focus classes their
+ * `ListingCard` uses, so the two cards behave identically on click.
+ *
+ * It still takes no action props: Product C matches and hands off. It does not
+ * book, and it owns no destination of its own — the id it links with is the
+ * one it was matched on, and `matchListings` has already proved that id
+ * against the catalogue that page reads from.
  */
 
 const SERVICE_LABELS: Record<Match['service_type'], string> = {
@@ -76,7 +83,10 @@ export default function ChatListingCard({ match, intent }: Props) {
   const hasAvailability = match.availability.length > 0;
 
   return (
-    <article className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-3">
+    <Link
+      href={`/listings/${match.listing_id}`}
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all focus:outline-none focus-visible:border-teal-500"
+    >
       <div className="flex justify-between items-start gap-3">
         <span className="text-xs font-semibold uppercase tracking-wider bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
           {SERVICE_LABELS[match.service_type]}
@@ -124,6 +134,6 @@ export default function ChatListingCard({ match, intent }: Props) {
           <span className="font-medium">Why this matched:</span> {whyThisMatched(match, intent)}
         </span>
       </p>
-    </article>
+    </Link>
   );
 }
