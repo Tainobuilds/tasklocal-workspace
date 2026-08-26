@@ -17,6 +17,7 @@ interface Props {
   listings: any[];
   bookings: any[];
   realBookings: any[];
+  customers: any[];
   onCreateListing: (formData: ListingFormData) => Promise<boolean>;
   onEditListing: (listingId: string, formData: ListingFormData) => Promise<boolean>;
 }
@@ -33,6 +34,53 @@ const toFormData = (item: any): ListingFormData => ({
   availability: Array.isArray(item?.availability) ? item.availability.filter((s: unknown) => typeof s === 'string') : [],
 });
 
+// A small pool of realistic-looking names for bookings whose customer_id
+// doesn't resolve to a real record in the customer directory — keeps the
+// dashboard looking populated during a demo instead of showing raw ids.
+const MOCK_CUSTOMER_NAMES = ['Sarah Jenkins', 'Alex Morgan', 'Jordan Lee', 'Taylor Brooks', 'Casey Rivera', 'Morgan Ellis'];
+
+const AVATAR_TINTS = [
+  'bg-brand-primary/10 text-brand-primary dark:text-emerald-400',
+  'bg-brand-accent/10 text-brand-accent',
+  'bg-brand-sage/25 text-brand-primary dark:text-emerald-400',
+];
+
+/** Deterministic, not random — the same id always maps to the same mock
+ * name/avatar tint, so a booking doesn't change appearance between polls. */
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function resolveCustomerName(customerId: string, customers: any[]): string {
+  const match = customers.find((c) => c?.customer_id === customerId);
+  if (typeof match?.customer_name === 'string' && match.customer_name.trim()) {
+    return match.customer_name.trim();
+  }
+  return MOCK_CUSTOMER_NAMES[hashString(customerId) % MOCK_CUSTOMER_NAMES.length];
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase() || '?';
+}
+
+function getAvatarTint(customerId: string): string {
+  return AVATAR_TINTS[hashString(customerId) % AVATAR_TINTS.length];
+}
+
+function formatBookingDateTime(value: unknown): string {
+  if (typeof value !== 'string') return 'Date unavailable';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
 const getListingStrength = (formData: typeof EMPTY_FORM) => {
   let score = 0;
   if (formData.title.trim()) score += 20;
@@ -46,7 +94,7 @@ const getListingStrength = (formData: typeof EMPTY_FORM) => {
   return { score, label: 'Weak', barClass: 'bg-red-400', textClass: 'text-red-600' };
 };
 
-export default function ProviderDashboard({ listings, bookings, realBookings, onCreateListing, onEditListing }: Props) {
+export default function ProviderDashboard({ listings, bookings, realBookings, customers, onCreateListing, onEditListing }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -248,15 +296,38 @@ export default function ProviderDashboard({ listings, bookings, realBookings, on
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                     : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
+              const customerId = typeof booking.customer_id === 'string' ? booking.customer_id : 'unknown';
+              const customerName = resolveCustomerName(customerId, customers);
+              const initials = getInitials(customerName);
+              const avatarTint = getAvatarTint(customerId);
+              const dateTime = formatBookingDateTime(booking.scheduled_at);
+              const hasValidPrice = typeof listing?.price === 'number' && Number.isFinite(listing.price);
+              const amountDisplay = hasValidPrice ? `$${listing.price.toFixed(2)}` : '—';
+
               return (
                 <div
                   key={booking.booking_id || idx}
-                  className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5"
+                  className="flex items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-xl px-4 py-3 transition-colors hover:border-stone-300 dark:hover:border-stone-700"
                 >
-                  <span className="text-sm text-slate-900 dark:text-slate-100 truncate">{listingTitle}</span>
-                  <span className={`text-[11px] font-medium border px-2 py-0.5 rounded-full shrink-0 ${statusClassName}`}>
-                    {status}
-                  </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${avatarTint}`}
+                    >
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{customerName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {listingTitle} · {dateTime}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{amountDisplay}</span>
+                    <span className={`text-[11px] font-medium border px-2 py-0.5 rounded-full ${statusClassName}`}>
+                      {status}
+                    </span>
+                  </div>
                 </div>
               );
             })}

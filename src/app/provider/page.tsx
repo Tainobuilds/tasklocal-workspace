@@ -88,6 +88,7 @@ function HomeTabs() {
 
   const [catalogueListings, setCatalogueListings] = useState<any[]>([]);
   const [realBookings, setRealBookings] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
 
   // Hydrate the shared bookings ledger from localStorage on mount.
   useEffect(() => {
@@ -210,6 +211,22 @@ function HomeTabs() {
     return () => clearInterval(interval);
   }, []);
 
+  // One-time fetch, not polled — the customer directory doesn't change
+  // within a session the way listings/bookings do.
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await fetch('/api/customers');
+        const data = await res.json();
+        setCustomers(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
+
   // Owns the actual data mutation (optimistic update, POST, reconciliation,
   // toast) while ProviderDashboard owns the "Create New Listing" form/modal UI.
   const createListing = async (formData: {
@@ -305,6 +322,7 @@ function HomeTabs() {
                 listings={listings}
                 bookings={bookings}
                 realBookings={realBookings}
+                customers={customers}
                 onCreateListing={createListing}
                 onEditListing={editListing}
               />
