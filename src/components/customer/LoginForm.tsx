@@ -50,11 +50,11 @@ export default function LoginForm({ customers, currentId, next }: Props) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <label className="block">
-        <span className="text-sm text-slate-400">Account</span>
+        <span className="text-sm text-brand-ink-muted dark:text-slate-400">Account</span>
         <select
           value={selected}
           onChange={(event) => setSelected(event.target.value)}
-          className="mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+          className="mt-1.5 w-full bg-white dark:bg-slate-950 border border-brand-line dark:border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent"
         >
           {customers.map((customer) => (
             <option key={customer.customer_id} value={customer.customer_id}>
@@ -65,7 +65,7 @@ export default function LoginForm({ customers, currentId, next }: Props) {
       </label>
 
       {error && (
-        <p className="text-sm text-rose-300 bg-rose-950/50 border border-rose-800/60 rounded-lg p-3">
+        <p className="text-sm text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 rounded-lg p-3">
           {error}
         </p>
       )}
@@ -73,14 +73,14 @@ export default function LoginForm({ customers, currentId, next }: Props) {
       <button
         type="submit"
         disabled={pending || !selected}
-        className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+        className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent"
       >
         {pending ? <Loader2 size={15} className="animate-spin" /> : <LogIn size={15} />}
         Sign in
       </button>
 
       {currentId && (
-        <p className="text-xs text-slate-500 text-center">
+        <p className="text-xs text-slate-500 dark:text-slate-500 text-center">
           Currently signed in as <span className="font-mono">{currentId}</span>. Choosing another
           account re-scopes every new booking, review, and report to it.
         </p>

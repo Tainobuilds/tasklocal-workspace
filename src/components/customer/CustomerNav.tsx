@@ -9,7 +9,7 @@ const LINKS = [
 /** Sub-navigation within the customer app: browsing and booking history. */
 export default function CustomerNav({ active }: { active: 'browse' | 'bookings' }) {
   return (
-    <nav className="flex gap-1 mb-6 border-b border-slate-200 dark:border-slate-800">
+    <nav className="flex gap-1 mb-4 border-b border-slate-200 dark:border-slate-800">
       {LINKS.map(({ id, label, href, icon: Icon }) => {
         const isActive = active === id;
         return (

@@ -6,7 +6,7 @@ import TriageDashboard from '@/components/internal/TriageDashboard';
 import { getTriageData } from '@/lib/server-data';
 
 export const metadata: Metadata = {
-  title: 'Trust & Safety · TaskLocal Internal',
+  title: 'Trust & Safety · Spruce Internal',
   description: 'Internal queue for triaging reports filed against listings and bookings.',
 };
 
@@ -31,14 +31,14 @@ export default async function TrustSafetyPage() {
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold leading-none">
-                TaskLocal Internal
+                Spruce Internal
               </p>
               <h1 className="font-semibold tracking-tight leading-tight">Trust &amp; Safety</h1>
             </div>
           </div>
 
           <Link
-            href="/"
+            href="/provider"
             className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
           >
             <ArrowLeft size={15} aria-hidden />

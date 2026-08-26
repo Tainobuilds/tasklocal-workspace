@@ -107,9 +107,10 @@ export default function CustomerApp({ listings: initialListings, defaultAddress,
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Find a service</h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+      <div className="mb-7">
+        <p className="text-[11.5px] font-semibold tracking-[0.1em] uppercase text-brand-sage mb-2">Customer workspace</p>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-brand-primary dark:text-slate-100">Find a Service</h1>
+        <p className="mt-1.5 text-[14.5px] text-brand-ink-muted dark:text-slate-400">
           Browse verified local providers and book in a few steps.
         </p>
       </div>

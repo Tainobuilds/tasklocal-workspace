@@ -6,7 +6,7 @@ import WorkspaceHeader from '@/components/WorkspaceHeader';
 import { getCatalogue, getCustomerBookings, getSessionCustomer } from '@/lib/server-data';
 
 export const metadata: Metadata = {
-  title: 'Find a service · TaskLocal',
+  title: 'Find a service · Spruce',
   description: 'Browse and book local cleaning, handyman, and moving services.',
 };
 

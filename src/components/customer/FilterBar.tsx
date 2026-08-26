@@ -5,15 +5,9 @@ import { SlidersHorizontal, X } from 'lucide-react';
 
 import { slotKey } from '@/lib/sanitize';
 import { formatUsd } from '@/lib/pricing';
-import { SERVICE_TYPES, WEEKDAYS, type AvailabilitySlot, type Filters, type ServiceType } from '@/lib/types';
+import { SERVICE_TYPE_LABELS, SERVICE_TYPES, WEEKDAYS, type AvailabilitySlot, type Filters, type ServiceType } from '@/lib/types';
 
 const PERIODS = ['AM', 'PM'] as const;
-
-const SERVICE_LABELS: Record<ServiceType, string> = {
-  cleaning: 'Cleaning',
-  handyman: 'Handyman',
-  moving: 'Moving',
-};
 
 interface Props {
   filters: Filters;
@@ -95,11 +89,11 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                   onClick={() => toggleService(type)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
                     active
-                      ? 'bg-teal-600 border-teal-600 text-white'
+                      ? 'bg-brand-primary border-brand-primary text-white'
                       : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
-                  {SERVICE_LABELS[type]}
+                  {SERVICE_TYPE_LABELS[type]}
                 </button>
               );
             })}
@@ -121,7 +115,7 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
           <div className="relative h-6 flex items-center">
             <div className="absolute inset-x-0 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800" />
             <div
-              className="absolute h-1.5 rounded-full bg-teal-500"
+              className="absolute h-1.5 rounded-full bg-brand-primary"
               style={{ left: `${leftPct}%`, width: `${Math.max(rightPct - leftPct, 0)}%` }}
             />
             <input
@@ -171,7 +165,7 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                       onClick={() => toggleSlot(slot)}
                       className={`text-[11px] py-1 rounded border transition-all ${
                         active
-                          ? 'bg-teal-600 border-teal-600 text-white'
+                          ? 'bg-brand-primary border-brand-primary text-white'
                           : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >

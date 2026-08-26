@@ -1,7 +1,22 @@
-/** Domain types for the TaskLocal customer app. */
+/** Domain types for the Spruce customer app. */
 
 export const SERVICE_TYPES = ['cleaning', 'handyman', 'moving'] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];
+
+/** Single source of truth for how a service type reads in the UI — every
+ * category pill (provider cards, browse cards, filters) pulls from this
+ * instead of keeping its own copy, so the wording can't drift apart. */
+export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  cleaning: 'Cleaning',
+  handyman: 'Handyman',
+  moving: 'Moving',
+};
+
+/** Shared classes for a static category tag (not an interactive filter
+ * button) — used on both the provider and browse listing cards so they
+ * render pixel-identical. */
+export const CATEGORY_PILL_CLASSES =
+  'inline-block text-[11px] font-semibold text-brand-ink-muted dark:text-slate-400 bg-brand-soft dark:bg-slate-800 border border-brand-line dark:border-slate-700 px-2.5 py-1 rounded-full';
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
