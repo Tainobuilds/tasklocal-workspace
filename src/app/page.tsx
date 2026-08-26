@@ -284,7 +284,7 @@ function HomeTabs() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       <WorkspaceHeader
         active={activeTab}
         onSelectWorkspaceTab={(tab) => {

@@ -16,6 +16,10 @@ const LISTING_STATUSES = ['active', 'flagged', 'removed'] as const;
  */
 export async function PATCH(request: Request, ctx: RouteContext<'/api/listings/[listingId]'>) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Service temporarily unavailable — Supabase is not configured.' }, { status: 503 });
+    }
+
     const { listingId } = await ctx.params;
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== 'object') {

@@ -51,6 +51,10 @@ const SEED_LISTINGS = [
 ];
 
 export async function GET() {
+  if (!supabase) {
+    return NextResponse.json({ error: 'Service temporarily unavailable — Supabase is not configured.' }, { status: 503 });
+  }
+
   const { data, error } = await supabase
     .from('listings')
     .upsert(SEED_LISTINGS, { onConflict: 'listing_id' })

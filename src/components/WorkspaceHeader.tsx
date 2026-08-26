@@ -7,6 +7,28 @@ import { Store, MessageSquare, Search, Moon, Sun, ClipboardList } from 'lucide-r
 
 import AccountMenu from './AccountMenu';
 
+/** Spruce logomark: two minimal interlocking triangles, one up and one down. */
+function SpruceLogo() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-8 w-8 shrink-0" aria-hidden="true">
+      <polygon
+        points="12,3 21,19 3,19"
+        fill="none"
+        stroke="var(--color-brand-primary)"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <polygon
+        points="12,21 21,5 3,5"
+        fill="none"
+        stroke="var(--color-brand-accent)"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 interface Props {
   active: 'provider' | 'chatbot' | 'customer';
   /** Provided by page.tsx, which switches tabs in place; browse omits it so tabs navigate instead. */
@@ -34,9 +56,9 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
     <header className="border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4 flex-wrap">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center font-bold text-white">TL</div>
+          <SpruceLogo />
           <span className="font-semibold text-lg tracking-tight text-slate-900 dark:text-slate-100 hidden sm:inline">
-            TaskLocal Workspace
+            Spruce
           </span>
         </Link>
 
@@ -45,7 +67,7 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
             const isActive = active === id;
             const className = `flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               isActive
-                ? 'bg-teal-600 text-white shadow-md'
+                ? 'bg-brand-primary text-white shadow-md'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`;
 
@@ -74,7 +96,7 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
             type="button"
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle light/dark theme"
-            className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent"
           >
             {mounted && resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
@@ -83,11 +105,11 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
             <button
               type="button"
               onClick={onOpenBookings}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent"
             >
               <ClipboardList size={14} /> Activity & Bookings
               {bookingsBadgeCount > 0 && (
-                <span className="text-[10px] font-semibold bg-teal-600 text-white px-1.5 py-0.5 rounded-full leading-none">
+                <span className="text-[10px] font-semibold bg-brand-primary text-white px-1.5 py-0.5 rounded-full leading-none">
                   {bookingsBadgeCount}
                 </span>
               )}
@@ -95,11 +117,11 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
           ) : (
             <Link
               href={bookingsHref ?? '/bookings'}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent"
             >
               <ClipboardList size={14} /> Activity & Bookings
               {bookingsBadgeCount > 0 && (
-                <span className="text-[10px] font-semibold bg-teal-600 text-white px-1.5 py-0.5 rounded-full leading-none">
+                <span className="text-[10px] font-semibold bg-brand-primary text-white px-1.5 py-0.5 rounded-full leading-none">
                   {bookingsBadgeCount}
                 </span>
               )}
