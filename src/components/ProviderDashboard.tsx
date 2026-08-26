@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge, Pencil, Zap, Eye } from 'lucide-react';
-import { SERVICE_TYPES } from '@/lib/types';
+import { CATEGORY_PILL_CLASSES, SERVICE_TYPES, SERVICE_TYPE_LABELS } from '@/lib/types';
 import AvailabilitySelector from './AvailabilitySelector';
 
 type ListingFormData = {
@@ -280,8 +280,8 @@ export default function ProviderDashboard({
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  <span className="inline-block text-[11px] font-semibold text-brand-ink-muted dark:text-slate-400 bg-brand-soft dark:bg-slate-800 border border-brand-line dark:border-slate-700 px-2.5 py-1 rounded-full">
-                    {category}
+                  <span className={CATEGORY_PILL_CLASSES}>
+                    {SERVICE_TYPE_LABELS[category as keyof typeof SERVICE_TYPE_LABELS] ?? category}
                   </span>
                   {moderationBadge && (
                     <span className="inline-block text-[11px] font-semibold border px-2.5 py-1 rounded-full bg-brand-amber-tint text-[#B45309] border-[#F3DFBE]">

@@ -166,7 +166,7 @@ body {
   width: 1rem;
   border-radius: 9999px;
   background: #ffffff;
-  border: 2px solid #6366f1;
+  border: 2px solid var(--brand-primary);
   cursor: pointer;
 }
 
@@ -176,7 +176,7 @@ body {
   width: 1rem;
   border-radius: 9999px;
   background: #ffffff;
-  border: 2px solid #6366f1;
+  border: 2px solid var(--brand-primary);
   cursor: pointer;
 }
 
@@ -185,9 +185,9 @@ body {
 }
 
 .range-thumb:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 3px rgba(11, 43, 34, 0.35);
 }
 
 .range-thumb:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 3px rgba(11, 43, 34, 0.35);
 }
