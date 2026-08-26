@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Loader2, Search, SearchX, TriangleAlert } from 'lucide-react';
 
-import type {
-  ConversationTurn,
-  Intent,
-  Match,
-  MatchErrorResponse,
-  MatchResponse,
-} from '@/lib/chat/types';
+import type { ConversationTurn, MatchErrorResponse, MatchResponse } from '@/lib/chat/types';
+import {
+  appendTurn,
+  getTranscriptServerSnapshot,
+  getTranscriptSnapshot,
+  subscribeTranscript,
+  type AssistantTurn,
+} from '@/lib/chat/transcript';
 
 import ChatListingCard from './ChatListingCard';
 
@@ -22,29 +23,15 @@ import ChatListingCard from './ChatListingCard';
  *
  * This page renders only what `/api/match` returned. It never filters, ranks,
  * or constructs a listing of its own, so there is no path by which a listing
- * that is not in the dataset can appear on screen.
+ * that is not in the dataset can appear on screen. The restored transcript is
+ * held to the same bar rather than trusted: `readTranscript` re-validates every
+ * match field before a stored turn is allowed back on screen.
  *
  * It is deliberately NOT wired into `WorkspaceHeader`: that component's tab set
  * has no member for this route, and claiming `active="chatbot"` would light up
  * a tab that navigates to a different product. Adding a tab means editing a
  * shared component, which needs its owner's agreement.
  */
-
-interface AssistantTurn {
-  role: 'assistant';
-  /** The explanation from the API, or the error text. Never invented. */
-  content: string;
-  matches: Match[];
-  intent: Intent | null;
-  failed: boolean;
-}
-
-interface UserTurn {
-  role: 'user';
-  content: string;
-}
-
-type Turn = UserTurn | AssistantTurn;
 
 const EXAMPLES = [
   'Clean out my garage and move some boxes',
@@ -91,7 +78,15 @@ function AssistantBlock({ turn }: { turn: AssistantTurn }) {
 }
 
 export default function ChatPage() {
-  const [turns, setTurns] = useState<Turn[]>([]);
+  // The transcript lives in sessionStorage, not in this component, so that
+  // navigating to a listing page and back does not discard it. Subscribed to
+  // rather than restored in an effect: the server snapshot is always empty, so
+  // the first client render matches the server's without a setState cascade.
+  const turns = useSyncExternalStore(
+    subscribeTranscript,
+    getTranscriptSnapshot,
+    getTranscriptServerSnapshot,
+  );
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -115,7 +110,7 @@ export default function ChatPage() {
       content: turn.content,
     }));
 
-    setTurns((current) => [...current, { role: 'user', content: message }]);
+    appendTurn({ role: 'user', content: message });
     setInput('');
     setPending(true);
 
@@ -130,35 +125,32 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const error = 'error' in body ? body.error : 'Something went wrong.';
-        setTurns((current) => [
-          ...current,
-          { role: 'assistant', content: error, matches: [], intent: null, failed: true },
-        ]);
+        appendTurn({
+          role: 'assistant',
+          content: error,
+          matches: [],
+          intent: null,
+          failed: true,
+        });
         return;
       }
 
       const result = body as MatchResponse;
-      setTurns((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: result.explanation,
-          matches: result.matches,
-          intent: result.intent,
-          failed: false,
-        },
-      ]);
+      appendTurn({
+        role: 'assistant',
+        content: result.explanation,
+        matches: result.matches,
+        intent: result.intent,
+        failed: false,
+      });
     } catch {
-      setTurns((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: 'Could not reach the matching service. Check your connection and try again.',
-          matches: [],
-          intent: null,
-          failed: true,
-        },
-      ]);
+      appendTurn({
+        role: 'assistant',
+        content: 'Could not reach the matching service. Check your connection and try again.',
+        matches: [],
+        intent: null,
+        failed: true,
+      });
     } finally {
       setPending(false);
     }
