@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskLocal Workspace",
+  title: "Spruce",
   description: "Book trusted local cleaning, handyman, and moving services.",
 };
 

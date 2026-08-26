@@ -33,8 +33,8 @@ export async function generateMetadata({
   const detail = await getProviderDetail(providerId);
   return {
     title: detail?.provider?.provider_name
-      ? `${detail.provider.provider_name} · TaskLocal`
-      : 'Provider not found · TaskLocal',
+      ? `${detail.provider.provider_name} · Spruce`
+      : 'Provider not found · Spruce',
   };
 }
 export default async function ProviderPage({ params }: PageProps<'/providers/[providerId]'>) {
@@ -97,7 +97,7 @@ export default async function ProviderPage({ params }: PageProps<'/providers/[pr
             <h2 className="font-semibold text-lg mb-4">Services by this provider</h2>
             {listings.length === 0 ? (
               <p className="text-sm text-slate-500 italic">
-                No services currently offered on TaskLocal.
+                No services currently offered on Spruce.
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

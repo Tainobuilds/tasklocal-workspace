@@ -1,6 +1,6 @@
 /** Shared price maths, so the confirmation screen and the server agree. */
 
-/** TaskLocal's platform fee, applied on top of the provider's flat price. */
+/** Spruce's platform fee, applied on top of the provider's flat price. */
 export const SERVICE_FEE_RATE = 0.1;
 
 export interface PriceBreakdown {

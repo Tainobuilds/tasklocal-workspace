@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps<'/listings/[listing
   const { listingId } = await params;
   const detail = await getListingDetail(listingId);
   return {
-    title: detail ? `${detail.listing.title} · TaskLocal` : 'Listing not found · TaskLocal',
+    title: detail ? `${detail.listing.title} · Spruce` : 'Listing not found · Spruce',
   };
 }
 

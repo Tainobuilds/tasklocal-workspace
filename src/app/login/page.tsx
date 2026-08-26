@@ -7,7 +7,7 @@ import { getCustomers } from '@/lib/server-data';
 import { getSessionCustomerId } from '@/lib/session';
 
 export const metadata: Metadata = {
-  title: 'Sign in · TaskLocal',
+  title: 'Sign in · Spruce',
   description: 'Sign in to book services and manage your bookings.',
 };
 

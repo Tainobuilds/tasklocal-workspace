@@ -82,7 +82,7 @@ export default function BookingCard({ booking, isPast, hasReview }: Props) {
       {listing?.withdrawn && (
         <p className="flex items-start gap-2 text-xs text-amber-400 bg-amber-950/40 border border-amber-800/60 rounded-lg p-2.5">
           <AlertTriangle size={14} className="shrink-0 mt-px" />
-          This service is no longer offered on TaskLocal. Your booking is unaffected — contact the
+          This service is no longer offered on Spruce. Your booking is unaffected — contact the
           provider with any questions.
         </p>
       )}

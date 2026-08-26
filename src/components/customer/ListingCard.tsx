@@ -58,7 +58,7 @@ export default function ListingCard({ listing, onBook }: Props) {
     // stops the click so it can still open the flow directly.
     <Link
       href={`/listings/${listing.listing_id}`}
-      className="group bg-brand-surface dark:bg-slate-900 border border-brand-border dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:border-brand-accent"
+      className="group bg-brand-surface dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:border-brand-accent"
     >
       <div className="flex justify-between items-start gap-3">
         <span className="text-xs font-semibold uppercase tracking-wider bg-slate-50 dark:bg-slate-950 text-brand-primary dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-2.5 py-0.5 rounded-full whitespace-nowrap">

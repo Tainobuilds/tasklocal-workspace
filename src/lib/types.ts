@@ -1,4 +1,4 @@
-/** Domain types for the TaskLocal customer app. */
+/** Domain types for the Spruce customer app. */
 
 export const SERVICE_TYPES = ['cleaning', 'handyman', 'moving'] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];

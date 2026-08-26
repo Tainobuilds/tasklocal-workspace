@@ -6,28 +6,7 @@ import { useEffect, useState } from 'react';
 import { Store, MessageSquare, Search, Moon, Sun, ClipboardList } from 'lucide-react';
 
 import AccountMenu from './AccountMenu';
-
-/** Spruce logomark: two minimal interlocking triangles, one up and one down. */
-function SpruceLogo() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8 shrink-0" aria-hidden="true">
-      <polygon
-        points="12,3 21,19 3,19"
-        fill="none"
-        stroke="var(--color-brand-primary)"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points="12,21 21,5 3,5"
-        fill="none"
-        stroke="var(--color-brand-accent)"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import SpruceLogo from './SpruceLogo';
 
 interface Props {
   active: 'provider' | 'chatbot' | 'customer';
@@ -41,8 +20,8 @@ interface Props {
 }
 
 const TABS: Array<{ id: 'provider' | 'chatbot' | 'customer'; label: string; icon: typeof Store; href: string }> = [
-  { id: 'provider', label: 'Provider App', icon: Store, href: '/' },
-  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/?tab=chatbot' },
+  { id: 'provider', label: 'Provider App', icon: Store, href: '/provider' },
+  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/provider?tab=chatbot' },
   { id: 'customer', label: 'Customer App', icon: Search, href: '/browse' },
 ];
 

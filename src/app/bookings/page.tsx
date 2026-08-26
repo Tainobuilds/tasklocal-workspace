@@ -11,8 +11,8 @@ import { getCustomerBookings, getSessionCustomer, readJsonFile } from '@/lib/ser
 import type { CleanBooking } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'My bookings · TaskLocal',
-  description: 'Review the services you have booked on TaskLocal.',
+  title: 'My bookings · Spruce',
+  description: 'Review the services you have booked on Spruce.',
 };
 
 export const dynamic = 'force-dynamic';

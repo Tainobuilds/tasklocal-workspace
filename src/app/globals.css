@@ -6,12 +6,12 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Spruce brand palette */
-  --brand-primary: #0f382c;
+  /* Spruce brand palette — Japandi-Bento (see DESIGN.md) */
+  --brand-primary: #0b2b22;
   --brand-accent: #d97706;
-  --brand-background: #f9f8f6;
+  --brand-sage: #a3b19b;
+  --brand-background: #faf8f5;
   --brand-surface: #ffffff;
-  --brand-border: #e5e7eb;
 }
 
 @theme inline {
@@ -22,9 +22,9 @@
 
   --color-brand-primary: var(--brand-primary);
   --color-brand-accent: var(--brand-accent);
+  --color-brand-sage: var(--brand-sage);
   --color-brand-background: var(--brand-background);
   --color-brand-surface: var(--brand-surface);
-  --color-brand-border: var(--brand-border);
 }
 
 body {

@@ -290,30 +290,30 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
   const bookingTitle = bookingListing?.title || bookingListing?.name || bookingListing?.service_name || 'Service';
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[600px]">
+    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[600px]">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+      <div className="p-4 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-slate-900 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-sm text-slate-900 dark:text-slate-100">TaskLocal AI Match Assistant</span>
+          <span className="font-medium text-sm text-slate-900 dark:text-slate-100">Spruce AI Match Assistant</span>
         </div>
         <span className="text-xs text-slate-500 flex items-center gap-1">
-          <Sparkles size={12} className="text-teal-600" /> Instant Search Active
+          <Sparkles size={12} className="text-brand-accent" /> Instant Search Active
         </span>
       </div>
 
       {/* Smart Quick-Filters */}
       {hasAnyResults && (
-        <div className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 flex items-center gap-2 flex-wrap">
+        <div className="px-4 py-2.5 border-b border-stone-200 dark:border-stone-800 bg-slate-50 dark:bg-slate-800 flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide shrink-0">Filters</span>
           {QUICK_FILTERS.map((filter) => (
             <button
               key={filter.key}
               onClick={() => toggleFilter(filter.key)}
               aria-pressed={activeFilters[filter.key]}
-              className={`text-xs px-3 py-1 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent ${
                 activeFilters[filter.key]
-                  ? 'bg-teal-600 border-teal-600 text-white shadow-sm'
+                  ? 'bg-brand-primary border-brand-primary text-white shadow-sm'
                   : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
@@ -338,7 +338,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
             <div
               className={`max-w-[80%] p-3.5 rounded-2xl text-sm ${
                 msg.sender === 'user'
-                  ? 'bg-teal-600 text-white rounded-br-none'
+                  ? 'bg-brand-primary text-white rounded-br-none'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-bl-none border border-slate-200 dark:border-slate-700'
               }`}
             >
@@ -346,12 +346,12 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
             </div>
 
             {msg.structured && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 mt-2 w-full bg-teal-50/60 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-teal-700 dark:text-teal-400 uppercase tracking-wide mb-1.5">
+              <div className="animate-in fade-in slide-in-from-bottom-2 mt-2 w-full bg-brand-sage/15 dark:bg-brand-sage/10 border border-brand-sage/40 dark:border-brand-sage/30 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-700 dark:text-brand-sage uppercase tracking-wide mb-1.5">
                   <Sparkles size={11} /> Parsed Intent
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[11px] font-medium text-teal-700 dark:text-teal-400 bg-white dark:bg-slate-900 border border-teal-200 dark:border-teal-800/50 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-medium text-slate-700 dark:text-brand-sage bg-white dark:bg-slate-900 border border-brand-sage/50 dark:border-brand-sage/30 px-2 py-0.5 rounded-full">
                     Category: {msg.structured.category}
                   </span>
                   <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-full">
@@ -373,7 +373,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                     className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all focus:outline-none focus:ring-2 ${
                       option === 'Emergency'
                         ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 focus:ring-red-500'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 focus:ring-teal-500'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-brand-sage/15 hover:border-brand-sage hover:text-brand-primary focus:ring-brand-accent'
                     }`}
                   >
                     {option}
@@ -409,7 +409,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                       <div
                         key={matchIdx}
                         style={{ animationDelay: `${matchIdx * 60}ms` }}
-                        className="animate-in fade-in slide-in-from-bottom-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md"
+                        className="animate-in fade-in slide-in-from-bottom-2 bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 p-3 rounded-2xl shadow-sm flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-md"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
@@ -462,13 +462,13 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       </div>
 
       {/* Quick Category Suggestion Buttons */}
-      <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-t border-stone-200 dark:border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
         <span className="text-xs text-slate-500 whitespace-nowrap pl-1">Quick search:</span>
         {CATEGORY_SUGGESTIONS.map((cat) => (
           <button
             key={cat.value}
             onClick={() => executeSearch(cat.value)}
-            className="text-xs bg-white dark:bg-slate-900 hover:bg-teal-50 hover:border-teal-300 text-slate-600 dark:text-slate-400 hover:text-teal-700 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            className="text-xs bg-white dark:bg-slate-900 hover:bg-brand-sage/15 hover:border-brand-sage text-slate-600 dark:text-slate-400 hover:text-brand-primary border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-full whitespace-nowrap transition-all"
           >
             {cat.label}
           </button>
@@ -476,15 +476,15 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleFormSubmit} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2 bg-white dark:bg-slate-900">
+      <form onSubmit={handleFormSubmit} className="p-3 border-t border-stone-200 dark:border-stone-800 flex gap-2 bg-white dark:bg-slate-900">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Type a service or requirement..."
-          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent"
         />
-        <button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <button type="submit" className="bg-brand-primary hover:opacity-90 text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent">
           <Search size={18} />
         </button>
       </form>
@@ -492,7 +492,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
       {/* Booking Modal */}
       {bookingListing && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-xl">
+          <div className="relative overflow-hidden bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl w-full max-w-sm p-6 shadow-xl">
             {confettiPieces.map((piece) => (
               <span
                 key={piece.id}
@@ -520,14 +520,14 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setBookingHours((h) => Math.max(1, h - 1))}
-                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     >
                       −
                     </button>
                     <span className="text-sm font-semibold w-4 text-center text-slate-900 dark:text-slate-100">{bookingHours}</span>
                     <button
                       onClick={() => setBookingHours((h) => Math.min(8, h + 1))}
-                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="h-7 w-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     >
                       +
                     </button>
@@ -552,7 +552,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                 <button
                   onClick={confirmBooking}
                   disabled={isBookingSubmitting}
-                  className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-all text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
                 >
                   {isBookingSubmitting ? (
                     <>

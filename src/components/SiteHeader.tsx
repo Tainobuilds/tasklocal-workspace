@@ -5,12 +5,13 @@ import { MessageSquare, Search, ShieldCheck, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import AccountMenu from './AccountMenu';
+import SpruceLogo from './SpruceLogo';
 
 export type SiteTab = 'provider' | 'chatbot' | 'customer';
 
 const TABS: Array<{ id: SiteTab; label: string; icon: LucideIcon; href: string }> = [
-  { id: 'provider', label: 'Provider App', icon: Store, href: '/' },
-  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/?tab=chatbot' },
+  { id: 'provider', label: 'Provider App', icon: Store, href: '/provider' },
+  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/provider?tab=chatbot' },
   { id: 'customer', label: 'Customer App', icon: Search, href: '/browse' },
 ];
 
@@ -28,19 +29,15 @@ export default function SiteHeader({ active, onSelect }: Props) {
     <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white">
-            TL
-          </div>
-          <span className="font-semibold text-lg tracking-tight hidden sm:inline">
-            TaskLocal Workspace
-          </span>
+          <SpruceLogo textClassName="text-emerald-400" />
+          <span className="font-semibold text-lg tracking-tight hidden sm:inline">Spruce</span>
         </Link>
 
         <nav className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
           {TABS.map(({ id, label, icon: Icon, href }) => {
             const isActive = active === id;
             const className = `flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              isActive ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`;
 
             // The home page owns provider/chatbot as local state; everything
