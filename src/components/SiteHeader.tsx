@@ -26,18 +26,18 @@ interface Props {
 
 export default function SiteHeader({ active, onSelect }: Props) {
   return (
-    <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+    <header className="border-b border-brand-line dark:border-slate-800 bg-brand-background/90 dark:bg-slate-900/50 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <SpruceLogo variant="reversed" />
-          <span className="font-semibold text-lg tracking-tight hidden sm:inline">Spruce</span>
+          <SpruceLogo />
+          <span className="font-semibold text-lg tracking-tight text-slate-900 dark:text-slate-100 hidden sm:inline">Spruce</span>
         </Link>
 
-        <nav className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
+        <nav className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50">
           {TABS.map(({ id, label, icon: Icon, href }) => {
             const isActive = active === id;
             const className = `flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              isActive ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              isActive ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`;
 
             // The home page owns provider/chatbot as local state; everything
@@ -65,12 +65,12 @@ export default function SiteHeader({ active, onSelect }: Props) {
           trust & safety console is an internal tool, not a fourth app in the
           customer-facing suite.
         */}
-        <div className="flex items-center gap-3 pl-3 border-l border-slate-800 shrink-0">
+        <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800 shrink-0">
           <AccountMenu />
           <Link
             href="/internal/trust-safety"
             title="Internal trust & safety console"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
           >
             <ShieldCheck size={15} />
             <span className="hidden lg:inline">Trust &amp; Safety</span>

@@ -482,7 +482,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed, onClose 
                               <Star size={10} className="fill-amber-400 text-amber-400" /> {rating}
                             </span>
                             {verified && (
-                              <span className="flex items-center gap-0.5 text-[11px] font-medium text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">
+                              <span className="flex items-center gap-0.5 text-[11px] font-medium text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 px-2 py-0.5 rounded-full">
                                 <BadgeCheck size={10} /> Verified Pro
                               </span>
                             )}

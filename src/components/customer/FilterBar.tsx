@@ -89,7 +89,7 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                   onClick={() => toggleService(type)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
                     active
-                      ? 'bg-teal-600 border-teal-600 text-white'
+                      ? 'bg-brand-primary border-brand-primary text-white'
                       : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
@@ -165,7 +165,7 @@ export default function FilterBar({ filters, onChange, bounds, swapped, activeCo
                       onClick={() => toggleSlot(slot)}
                       className={`text-[11px] py-1 rounded border transition-all ${
                         active
-                          ? 'bg-teal-600 border-teal-600 text-white'
+                          ? 'bg-brand-primary border-brand-primary text-white'
                           : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
