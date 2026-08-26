@@ -49,8 +49,8 @@ export default function WriteReview({ listing, signedIn, reviewableBookingId }: 
         onClick={startReview}
         className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
           reviewableBookingId
-            ? 'border-amber-700/60 text-amber-300 hover:border-amber-500'
-            : 'border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            ? 'border-amber-400/60 dark:border-amber-700/60 text-amber-700 dark:text-amber-300 hover:border-amber-500'
+            : 'border-brand-line dark:border-slate-800 text-brand-slate dark:text-slate-400 hover:text-brand-ink-muted dark:hover:text-slate-200 hover:border-brand-slate dark:hover:border-slate-700'
         }`}
       >
         <Star size={14} className={reviewableBookingId ? 'fill-amber-400 text-amber-400' : ''} />
@@ -58,14 +58,14 @@ export default function WriteReview({ listing, signedIn, reviewableBookingId }: 
       </button>
 
       {notice && (
-        <p className="text-xs text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-3">
+        <p className="text-xs text-brand-ink-muted dark:text-slate-400 bg-brand-soft dark:bg-slate-950 border border-brand-line dark:border-slate-800 rounded-lg p-3">
           {notice}
           {!signedIn && (
             <>
               {' '}
               <Link
                 href={`/login?next=/listings/${listing.listing_id}`}
-                className="text-indigo-400 hover:text-indigo-300 underline"
+                className="text-brand-primary dark:text-indigo-400 hover:text-brand-primary-hover dark:hover:text-indigo-300 underline"
               >
                 Sign in
               </Link>

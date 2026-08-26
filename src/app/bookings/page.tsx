@@ -5,7 +5,7 @@ import { CalendarX } from 'lucide-react';
 
 import BookingCard from '@/components/customer/BookingCard';
 import CustomerNav from '@/components/customer/CustomerNav';
-import SiteHeader from '@/components/SiteHeader';
+import WorkspaceHeader from '@/components/WorkspaceHeader';
 import { sanitizeReviews } from '@/lib/reviews';
 import { getCustomerBookings, getSessionCustomer, readJsonFile } from '@/lib/server-data';
 import type { CleanBooking } from '@/lib/types';
@@ -71,15 +71,15 @@ export default async function BookingsPage() {
   ].filter((section) => section.items.length > 0);
 
   return (
-    <div className="dark min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <SiteHeader active="customer" />
+    <div className="min-h-screen bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+      <WorkspaceHeader active="customer" bookingsBadgeCount={bookings.length} bookingsHref="/bookings" />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <CustomerNav active="bookings" />
 
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">My bookings</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="font-display text-2xl font-bold text-brand-primary dark:text-slate-100">My bookings</h1>
+          <p className="text-brand-ink-muted dark:text-slate-400 text-sm">
             {bookings.length === 0
               ? 'Services you book will appear here.'
               : `${bookings.length} ${bookings.length === 1 ? 'booking' : 'bookings'} for ${
@@ -89,15 +89,15 @@ export default async function BookingsPage() {
         </div>
 
         {bookings.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-slate-800 rounded-2xl">
-            <CalendarX size={28} className="text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-300 font-medium">No bookings yet</p>
-            <p className="text-sm text-slate-500 mt-1">
+          <div className="text-center py-16 border border-dashed border-brand-line dark:border-slate-800 rounded-2xl">
+            <CalendarX size={28} className="text-brand-slate dark:text-slate-600 mx-auto mb-3" />
+            <p className="text-brand-ink-muted dark:text-slate-300 font-medium">No bookings yet</p>
+            <p className="text-sm text-brand-slate dark:text-slate-500 mt-1">
               Once you book a service it will show up here with its date, address, and total.
             </p>
             <Link
               href="/browse"
-              className="inline-block mt-4 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="inline-block mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               Browse services
             </Link>
@@ -106,9 +106,9 @@ export default async function BookingsPage() {
           <div className="space-y-8">
             {sections.map((section) => (
               <section key={section.key}>
-                <h2 className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-3">
+                <h2 className="text-xs uppercase tracking-wider text-brand-slate dark:text-slate-500 font-semibold mb-3">
                   {section.title}
-                  <span className="ml-2 text-slate-600">{section.items.length}</span>
+                  <span className="ml-2 text-brand-slate/70 dark:text-slate-600">{section.items.length}</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {section.items.map((booking) => (

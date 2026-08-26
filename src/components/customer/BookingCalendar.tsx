@@ -91,13 +91,13 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-slate-400 mb-3">
+        <p className="text-sm text-brand-ink-muted dark:text-slate-400 mb-3">
           Only the days this provider published are selectable.
         </p>
 
         <div className="grid grid-cols-7 gap-1 mb-1">
           {WEEKDAYS.map((day) => (
-            <div key={day} className="text-[11px] text-center text-slate-500 font-medium py-1">
+            <div key={day} className="text-[11px] text-center text-brand-slate dark:text-slate-500 font-medium py-1">
               {day}
             </div>
           ))}
@@ -115,11 +115,11 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
                 onClick={() => onSelect(day.key, null)}
                 className={`aspect-square rounded-lg text-sm transition-all border ${
                   isSelected
-                    ? 'bg-indigo-600 border-indigo-500 text-white font-semibold'
+                    ? 'bg-brand-primary border-brand-primary text-white font-semibold'
                     : day.selectable
-                      ? 'bg-slate-950 border-slate-800 text-slate-200 hover:border-indigo-600'
-                      : 'bg-slate-950/40 border-transparent text-slate-700 cursor-not-allowed'
-                } ${day.isToday && !isSelected ? 'ring-1 ring-slate-600' : ''}`}
+                      ? 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-200 hover:border-brand-primary dark:hover:border-indigo-600'
+                      : 'bg-brand-soft/40 dark:bg-slate-950/40 border-transparent text-brand-slate/60 dark:text-slate-700 cursor-not-allowed'
+                } ${day.isToday && !isSelected ? 'ring-1 ring-brand-slate dark:ring-slate-600' : ''}`}
               >
                 {day.dayOfMonth}
               </button>
@@ -130,7 +130,7 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
 
       {selectedDate && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2">
+          <p className="text-xs uppercase tracking-wider text-brand-slate dark:text-slate-500 font-semibold mb-2">
             Available times
           </p>
           <div className="flex gap-2">
@@ -142,8 +142,8 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
                 onClick={() => onSelect(selectedDate, period)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                   selectedPeriod === period
-                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-indigo-600'
+                    ? 'bg-brand-primary border-brand-primary text-white'
+                    : 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-300 hover:border-brand-primary dark:hover:border-indigo-600'
                 }`}
               >
                 {period === 'AM' ? 'Morning (9:00 AM)' : 'Afternoon (2:00 PM)'}
