@@ -1,20 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, CheckCircle, Sparkles, Star, Zap, X, SearchX, Loader2, BadgeCheck } from 'lucide-react';
+import { Search, CheckCircle, Sparkles, Star, Zap, X, SearchX, Loader2, BadgeCheck, UserRound } from 'lucide-react';
 
 interface Props {
   listings: any[];
   onBookingConfirmed?: (booking: any) => void;
+  /** Provided when rendered inside the AI Matcher drawer, for its own close button. */
+  onClose?: () => void;
 }
 
-const CATEGORY_SUGGESTIONS = [
-  { label: '🧹 Cleaning', value: 'cleaning' },
-  { label: '🔧 Handyman', value: 'handyman' },
-  { label: '⚡ Electrical', value: 'electrical' },
-  { label: '🚰 Plumbing', value: 'plumbing' },
-  { label: '📋 All Services', value: 'all' }
+// Natural-language one-click queries, shown above the input — replaces the
+// old emoji/category row since both served the same "canned query" purpose.
+const QUICK_PROMPTS = [
+  'Find handyman under $70/hr',
+  'Match emergency plumbing',
+  'Top-rated cleaning this week',
+  'Same-day moving help'
 ];
+
+// AI "thinking" delay before a response renders — long enough for the spark
+// icon's pulse to actually register, short enough not to feel sluggish.
+const THINKING_DELAY_MS = 600;
 
 const INTENT_SYNONYMS: Record<string, string[]> = {
   plumbing: ['plumbing', 'leak', 'pipe', 'faucet', 'drain', 'toilet', 'water heater'],
@@ -75,6 +82,14 @@ const hashString = (str: string) => {
   return Math.abs(hash);
 };
 
+// Provider avatar placeholder tints — cycled deterministically per listing so
+// the same match always shows the same color, not a real photo (none exists).
+const AVATAR_TINTS = [
+  'bg-brand-primary/10 text-brand-primary dark:text-emerald-400',
+  'bg-brand-accent/10 text-brand-accent',
+  'bg-brand-sage/25 text-brand-primary dark:text-emerald-400',
+];
+
 const getRating = (item: any) => {
   if (typeof item.rating === 'number') return item.rating.toFixed(1);
   const seed = hashString(String(item.listing_id || item.title || 'service'));
@@ -116,10 +131,11 @@ interface ChatMessage {
   structured?: StructuredIntent;
 }
 
-export default function MatchingChatbot({ listings, onBookingConfirmed }: Props) {
+export default function MatchingChatbot({ listings, onBookingConfirmed, onClose }: Props) {
   const [query, setQuery] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { sender: 'bot', text: 'Hello! What service are you looking for today? Select a quick category below or type a query.' }
+    { sender: 'bot', text: 'Hello! What service are you looking for today? Try a suggestion below or type a query.' }
   ]);
 
   const [bookingListing, setBookingListing] = useState<any | null>(null);
@@ -178,55 +194,70 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
     const term = searchTerm.toLowerCase().trim();
     const isAll = term === 'all';
 
-    // Broad category query: ask a quick guided-intake question instead of
-    // dumping every listing in that category straight away.
-    if (!isAll && BROAD_CATEGORIES.includes(term)) {
+    // The user's own message appears immediately; the "thinking" delay only
+    // applies to the AI's reply, so the spark icon has something to pulse for.
+    setChatMessages((prev) => [...prev, { sender: 'user', text: isAll ? 'Show all services' : `Looking for: ${searchTerm}` }]);
+    setIsThinking(true);
+
+    setTimeout(() => {
+      // Broad category query: ask a quick guided-intake question instead of
+      // dumping every listing in that category straight away.
+      if (!isAll && BROAD_CATEGORIES.includes(term)) {
+        setChatMessages((prev) => [
+          ...prev,
+          { sender: 'bot', text: `Got it — ${term}. What type of job is this?`, intakeCategory: term }
+        ]);
+        setIsThinking(false);
+        return;
+      }
+
+      const matched = runMatch(term, isAll);
+
+      // Free-text requests carry more signal than a bare category — parse out
+      // Category / Urgency / Scope so the customer can see what we understood.
+      const structured = !isAll ? parseStructuredIntent(term) : undefined;
+      if (structured?.category && (structured.urgency === 'Today' || structured.urgency === 'Emergency')) {
+        setActiveFilters((prev) => ({ ...prev, availableToday: true }));
+      }
+
       setChatMessages((prev) => [
         ...prev,
-        { sender: 'user', text: `Looking for: ${searchTerm}` },
-        { sender: 'bot', text: `Got it — ${term}. What type of job is this?`, intakeCategory: term }
+        {
+          sender: 'bot',
+          text: matched.length > 0
+            ? `I found ${matched.length} matching service(s):`
+            : `I couldn't find any listings matching "${searchTerm}".`,
+          matches: matched,
+          structured: structured?.category ? structured : undefined
+        }
       ]);
-      return;
-    }
-
-    const matched = runMatch(term, isAll);
-
-    // Free-text requests carry more signal than a bare category — parse out
-    // Category / Urgency / Scope so the customer can see what we understood.
-    const structured = !isAll ? parseStructuredIntent(term) : undefined;
-    if (structured?.category && (structured.urgency === 'Today' || structured.urgency === 'Emergency')) {
-      setActiveFilters((prev) => ({ ...prev, availableToday: true }));
-    }
-
-    setChatMessages((prev) => [
-      ...prev,
-      { sender: 'user', text: isAll ? 'Show all services' : `Looking for: ${searchTerm}` },
-      {
-        sender: 'bot',
-        text: matched.length > 0
-          ? `I found ${matched.length} matching service(s):`
-          : `I couldn't find any listings matching "${searchTerm}".`,
-        matches: matched,
-        structured: structured?.category ? structured : undefined
-      }
-    ]);
+      setIsThinking(false);
+    }, THINKING_DELAY_MS);
   };
 
   const resolveIntake = (msgIndex: number, category: string, jobType: string) => {
-    const combinedTerm = `${category} ${jobType.toLowerCase()}`;
-    const matched = runMatch(combinedTerm, false);
-
     setChatMessages((prev) => [
       ...prev.map((m, idx) => (idx === msgIndex ? { ...m, resolved: true } : m)),
-      { sender: 'user', text: jobType },
-      {
-        sender: 'bot',
-        text: matched.length > 0
-          ? `Here are ${jobType.toLowerCase()} ${category} pros I found:`
-          : `I couldn't find any ${jobType.toLowerCase()} ${category} listings — here's what's available in ${category}:`,
-        matches: matched
-      }
+      { sender: 'user', text: jobType }
     ]);
+    setIsThinking(true);
+
+    setTimeout(() => {
+      const combinedTerm = `${category} ${jobType.toLowerCase()}`;
+      const matched = runMatch(combinedTerm, false);
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: matched.length > 0
+            ? `Here are ${jobType.toLowerCase()} ${category} pros I found:`
+            : `I couldn't find any ${jobType.toLowerCase()} ${category} listings — here's what's available in ${category}:`,
+          matches: matched
+        }
+      ]);
+      setIsThinking(false);
+    }, THINKING_DELAY_MS);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -290,16 +321,36 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
   const bookingTitle = bookingListing?.title || bookingListing?.name || bookingListing?.service_name || 'Service';
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[600px]">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-slate-900 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-sm text-slate-900 dark:text-slate-100">Spruce AI Match Assistant</span>
+      <div className="p-4 border-b border-brand-line dark:border-slate-800 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2.5">
+          <Sparkles
+            size={18}
+            className={`transition-all ${
+              isThinking
+                ? 'text-brand-accent animate-pulse drop-shadow-[0_0_8px_rgba(217,119,6,0.7)]'
+                : 'text-brand-accent drop-shadow-[0_0_3px_rgba(217,119,6,0.35)]'
+            }`}
+          />
+          <div>
+            <p className="font-display font-bold text-sm text-brand-primary dark:text-slate-100 leading-tight">Spruce AI Matcher</p>
+            <p className="flex items-center gap-1.5 text-[11px] text-brand-slate dark:text-slate-400 mt-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              {isThinking ? 'Thinking…' : 'Online · Ready'}
+            </p>
+          </div>
         </div>
-        <span className="text-xs text-slate-500 flex items-center gap-1">
-          <Sparkles size={12} className="text-brand-accent" /> Instant Search Active
-        </span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close AI Matcher"
+            className="text-slate-400 hover:text-brand-primary dark:hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-accent rounded-full p-1"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Smart Quick-Filters */}
@@ -411,6 +462,13 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                         style={{ animationDelay: `${matchIdx * 60}ms` }}
                         className="animate-in fade-in slide-in-from-bottom-2 bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 p-3 rounded-2xl shadow-sm flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-md"
                       >
+                        <div
+                          className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${
+                            AVATAR_TINTS[hashString(String(item.listing_id || title)) % AVATAR_TINTS.length]
+                          }`}
+                        >
+                          <UserRound size={16} />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
                             <span className="font-semibold text-[15px] text-slate-900 dark:text-slate-100 truncate">{title}</span>
@@ -437,7 +495,7 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
                           onClick={() => openBookingModal(item)}
                           className="shrink-0 self-center flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-emerald-100 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
-                          <CheckCircle size={12} /> Book
+                          <CheckCircle size={12} /> Quick Book
                         </button>
                       </div>
                     );
@@ -461,31 +519,36 @@ export default function MatchingChatbot({ listings, onBookingConfirmed }: Props)
         ))}
       </div>
 
-      {/* Quick Category Suggestion Buttons */}
-      <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-t border-stone-200 dark:border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
-        <span className="text-xs text-slate-500 whitespace-nowrap pl-1">Quick search:</span>
-        {CATEGORY_SUGGESTIONS.map((cat) => (
+      {/* Quick-prompt suggestion pills — one click auto-sends the query */}
+      <div className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-t border-brand-line dark:border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+        {QUICK_PROMPTS.map((prompt) => (
           <button
-            key={cat.value}
-            onClick={() => executeSearch(cat.value)}
-            className="text-xs bg-white dark:bg-slate-900 hover:bg-brand-sage/15 hover:border-brand-sage text-slate-600 dark:text-slate-400 hover:text-brand-primary border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-full whitespace-nowrap transition-all"
+            key={prompt}
+            onClick={() => executeSearch(prompt)}
+            disabled={isThinking}
+            className="text-xs bg-white dark:bg-slate-900 hover:bg-brand-sage/15 hover:border-brand-sage text-slate-600 dark:text-slate-400 hover:text-brand-primary border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {cat.label}
+            {prompt}
           </button>
         ))}
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleFormSubmit} className="p-3 border-t border-stone-200 dark:border-stone-800 flex gap-2 bg-white dark:bg-slate-900">
+      <form onSubmit={handleFormSubmit} className="p-3 border-t border-brand-line dark:border-stone-800 flex gap-2 bg-white dark:bg-slate-900 shrink-0">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Type a service or requirement..."
-          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent"
+          disabled={isThinking}
+          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent disabled:opacity-60"
         />
-        <button type="submit" className="bg-brand-primary hover:opacity-90 text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent">
-          <Search size={18} />
+        <button
+          type="submit"
+          disabled={isThinking}
+          className="bg-brand-primary hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent"
+        >
+          {isThinking ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
         </button>
       </form>
 

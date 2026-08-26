@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge, Pencil } from 'lucide-react';
+import { Plus, PackageSearch, X, Loader2, Layers, DollarSign, Gauge, Pencil, Zap, Eye } from 'lucide-react';
 import { SERVICE_TYPES } from '@/lib/types';
 import AvailabilitySelector from './AvailabilitySelector';
 
@@ -257,6 +257,13 @@ export default function ProviderDashboard({
             const isActive = status === 'active';
             const isToggleable = status === 'active' || status === 'removed';
 
+            // Synthetic engagement metrics — no real analytics pipeline exists
+            // yet, so these are deterministic per-listing (stable across
+            // reloads, not random) rather than fabricated live numbers.
+            const engagementSeed = hashString(String(item.listing_id ?? title));
+            const aiMatches = 3 + (engagementSeed % 23);
+            const views = 40 + ((engagementSeed >> 3) % 210);
+
             return (
               <div
                 key={item.listing_id || item.id || idx}
@@ -283,7 +290,15 @@ export default function ProviderDashboard({
                   )}
                 </div>
                 <p className="text-brand-ink-muted dark:text-slate-400 text-[13.5px] leading-relaxed line-clamp-2 mt-3 flex-1">{description}</p>
-                <div className="mt-auto pt-4 flex items-center justify-between gap-3 border-t border-[#F0EEE9] dark:border-slate-800">
+                <div className="flex items-center gap-3 mt-3 text-[11px] text-brand-slate dark:text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Zap size={11} className="text-brand-accent" /> {aiMatches} AI Matches this week
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye size={11} /> {views} views
+                  </span>
+                </div>
+                <div className="mt-4 pt-4 flex items-center justify-between gap-3 border-t border-[#F0EEE9] dark:border-slate-800">
                   {isToggleable ? (
                     <div className="flex items-center gap-[3px] bg-brand-soft dark:bg-slate-800 border border-brand-line dark:border-slate-700 p-[3px] rounded-full">
                       <button

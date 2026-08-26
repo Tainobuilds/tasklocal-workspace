@@ -36,22 +36,22 @@ function ProviderDashboardSkeleton() {
 
 function MatchingChatbotSkeleton() {
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[600px]">
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-brand-line dark:border-slate-800 flex items-center justify-between">
         <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
-        <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+        <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
       </div>
       <div className="flex-1 p-4 space-y-4">
         <div className="h-16 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
         <div className="h-10 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse ml-auto" />
         <div className="h-20 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
       </div>
-      <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
+      <div className="px-3 py-2 border-t border-brand-line dark:border-slate-800 flex gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
         ))}
       </div>
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+      <div className="p-3 border-t border-brand-line dark:border-slate-800 flex gap-2">
         <div className="h-10 flex-1 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
         <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
       </div>
@@ -70,10 +70,9 @@ export default function Home() {
 
 function HomeTabs() {
   const searchParams = useSearchParams();
-  // Lets links from other pages (e.g. /internal/trust-safety) deep-link into the chatbot tab.
-  const [activeTab, setActiveTab] = useState<'provider' | 'chatbot'>(
-    searchParams.get('tab') === 'chatbot' ? 'chatbot' : 'provider',
-  );
+  // Lets links from other pages (e.g. /internal/trust-safety) deep-link
+  // straight into an already-open AI Matcher drawer.
+  const [isAiMatcherOpen, setIsAiMatcherOpen] = useState(searchParams.get('tab') === 'chatbot');
   const [listings, setListings] = useState<any[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -84,7 +83,7 @@ function HomeTabs() {
   const [isBookingsDrawerOpen, setIsBookingsDrawerOpen] = useState(false);
 
   const knownListingsCountRef = useRef(0);
-  const activeTabRef = useRef(activeTab);
+  const isAiMatcherOpenRef = useRef(isAiMatcherOpen);
 
   const [catalogueListings, setCatalogueListings] = useState<any[]>([]);
   const [realBookings, setRealBookings] = useState<any[]>([]);
@@ -118,8 +117,8 @@ function HomeTabs() {
   };
 
   useEffect(() => {
-    activeTabRef.current = activeTab;
-  }, [activeTab]);
+    isAiMatcherOpenRef.current = isAiMatcherOpen;
+  }, [isAiMatcherOpen]);
 
   useEffect(() => {
     knownListingsCountRef.current = listings.length;
@@ -159,7 +158,7 @@ function HomeTabs() {
 
         if (delta > 0) {
           setListings(fresh);
-          if (activeTabRef.current !== 'chatbot') {
+          if (!isAiMatcherOpenRef.current) {
             setNewServiceCount((prev) => prev + delta);
             showToast(`+${delta} New Service${delta > 1 ? 's' : ''} Available`);
           }
@@ -326,37 +325,29 @@ function HomeTabs() {
   return (
     <div className="min-h-screen bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       <WorkspaceHeader
-        active={activeTab}
-        onSelectWorkspaceTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'chatbot') setNewServiceCount(0);
+        active="provider"
+        onOpenAiMatcher={() => {
+          setIsAiMatcherOpen(true);
+          setNewServiceCount(0);
         }}
         bookingsBadgeCount={bookings.length}
         onOpenBookings={() => setIsBookingsDrawerOpen(true)}
       />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div key={activeTab} className="tab-transition">
-          {activeTab === 'provider' ? (
-            isInitialLoading ? (
-              <ProviderDashboardSkeleton />
-            ) : (
-              <ProviderDashboard
-                listings={listings}
-                bookings={bookings}
-                realBookings={realBookings}
-                customers={customers}
-                onCreateListing={createListing}
-                onEditListing={editListing}
-                onToggleListingStatus={toggleListingStatus}
-              />
-            )
-          ) : isInitialLoading ? (
-            <MatchingChatbotSkeleton />
-          ) : (
-            <MatchingChatbot listings={catalogueListings} onBookingConfirmed={addBooking} />
-          )}
-        </div>
+        {isInitialLoading ? (
+          <ProviderDashboardSkeleton />
+        ) : (
+          <ProviderDashboard
+            listings={listings}
+            bookings={bookings}
+            realBookings={realBookings}
+            customers={customers}
+            onCreateListing={createListing}
+            onEditListing={editListing}
+            onToggleListingStatus={toggleListingStatus}
+          />
+        )}
       </main>
 
       {toast && (
@@ -367,6 +358,25 @@ function HomeTabs() {
           </div>
         </div>
       )}
+
+      {/* AI Matcher Drawer */}
+      <div
+        onClick={() => setIsAiMatcherOpen(false)}
+        className={`fixed inset-0 bg-brand-primary/20 backdrop-blur-sm z-[70] transition-opacity duration-300 ${
+          isAiMatcherOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+      <div
+        className={`fixed inset-y-0 right-0 z-[80] w-full max-w-lg bg-white dark:bg-slate-900 border-l border-brand-line dark:border-slate-800 shadow-xl flex flex-col transition-transform duration-300 ease-out ${
+          isAiMatcherOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {isInitialLoading ? (
+          <MatchingChatbotSkeleton />
+        ) : (
+          <MatchingChatbot listings={catalogueListings} onBookingConfirmed={addBooking} onClose={() => setIsAiMatcherOpen(false)} />
+        )}
+      </div>
 
       {/* Global Booking Ledger Drawer */}
       <div
