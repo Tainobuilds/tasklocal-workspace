@@ -54,7 +54,7 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
   if (booking.status !== 'cancelled') {
     if (hasReview) {
       buttons.push(
-        <span key="reviewed" className="flex items-center gap-1.5 text-xs text-slate-500">
+        <span key="reviewed" className="flex items-center gap-1.5 text-xs text-brand-slate dark:text-slate-500">
           <Star size={13} className="fill-amber-400 text-amber-400" />
           Review submitted
         </span>,
@@ -65,7 +65,7 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
           key="review"
           type="button"
           onClick={() => setReviewing(true)}
-          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white transition-colors"
         >
           <Star size={13} />
           Leave a review
@@ -79,7 +79,7 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
   } else if (booking.status !== 'cancelled') {
     if (booking.scheduledAt === null) {
       buttons.push(
-        <span key="nodate" className="text-xs text-slate-500 italic">
+        <span key="nodate" className="text-xs text-brand-slate dark:text-slate-500 italic">
           Needs a scheduled time before it can be cancelled or completed.
         </span>,
       );
@@ -90,7 +90,7 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
           type="button"
           disabled={busy !== null}
           onClick={() => transition('completed')}
-          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 text-white transition-colors"
         >
           {busy === 'completed' ? <Loader2 size={13} className="animate-spin" /> : <CheckCheck size={13} />}
           Mark completed
@@ -103,7 +103,7 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
           type="button"
           disabled={busy !== null}
           onClick={() => transition('cancelled')}
-          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:border-rose-800/60 hover:text-rose-300 disabled:opacity-50 transition-colors"
+          className="flex items-center justify-center gap-1.5 flex-1 text-xs font-medium py-1.5 rounded-lg border border-brand-line dark:border-slate-700 text-brand-ink-muted dark:text-slate-300 hover:border-rose-300 dark:hover:border-rose-800/60 hover:text-rose-700 dark:hover:text-rose-300 disabled:opacity-50 transition-colors"
         >
           {busy === 'cancelled' ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
           Cancel booking
@@ -115,9 +115,9 @@ export default function BookingActions({ booking, isPast, hasReview }: Props) {
   if (buttons.length === 0 && !error) return null;
 
   return (
-    <div className="pt-3 mt-1 border-t border-slate-800 space-y-2">
+    <div className="pt-3 mt-1 border-t border-brand-line dark:border-slate-800 space-y-2">
       {error && (
-        <p className="flex items-start gap-1.5 text-xs text-rose-300 bg-rose-950/40 border border-rose-800/60 rounded-lg p-2">
+        <p className="flex items-start gap-1.5 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg p-2">
           <TriangleAlert size={12} className="shrink-0 mt-0.5" />
           {error}
         </p>
