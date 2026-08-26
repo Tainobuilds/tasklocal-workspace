@@ -300,6 +300,29 @@ function HomeTabs() {
     }
   };
 
+  // Quick active/inactive toggle from the listing card. Reuses the existing
+  // 'active'/'removed' listing_status values rather than a new status — see
+  // dashboard-ux-refinements design notes for why (no schema migration).
+  const toggleListingStatus = async (listingId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'active' ? 'removed' : 'active';
+    try {
+      const res = await fetch(`/api/listings/${listingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_status: nextStatus }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update listing status');
+
+      await fetchListings();
+      showToast(nextStatus === 'active' ? 'Listing reactivated.' : 'Listing deactivated.');
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       <WorkspaceHeader
@@ -325,6 +348,7 @@ function HomeTabs() {
                 customers={customers}
                 onCreateListing={createListing}
                 onEditListing={editListing}
+                onToggleListingStatus={toggleListingStatus}
               />
             )
           ) : isInitialLoading ? (

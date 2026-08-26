@@ -41,36 +41,39 @@ export default function WorkspaceHeader({ active, onSelectWorkspaceTab, bookings
           </span>
         </Link>
 
-        <nav className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
-          {TABS.map(({ id, label, icon: Icon, href }) => {
-            const isActive = active === id;
-            const className = `flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              isActive
-                ? 'bg-brand-primary text-white shadow-md'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-            }`;
+        {/* Everything else lives in one right-aligned cluster — a minimal,
+            compact mode-switcher pill plus the existing controls, rather than
+            a wide tab bar occupying the header's central line. */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          <nav className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
+            {TABS.map(({ id, label, icon: Icon, href }) => {
+              const isActive = active === id;
+              const className = `flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`;
 
-            // page.tsx passes onSelectWorkspaceTab and owns provider/chatbot as local
-            // tab state; browse doesn't, so provider/chatbot become plain navigation.
-            if (onSelectWorkspaceTab && id !== 'customer') {
+              // page.tsx passes onSelectWorkspaceTab and owns provider/chatbot as local
+              // tab state; browse doesn't, so provider/chatbot become plain navigation.
+              if (onSelectWorkspaceTab && id !== 'customer') {
+                return (
+                  <button key={id} type="button" onClick={() => onSelectWorkspaceTab(id)} className={className}>
+                    <Icon size={13} />
+                    <span className="hidden sm:inline">{label}</span>
+                  </button>
+                );
+              }
+
               return (
-                <button key={id} type="button" onClick={() => onSelectWorkspaceTab(id)} className={className}>
-                  <Icon size={16} />
+                <Link key={id} href={href} className={className}>
+                  <Icon size={13} />
                   <span className="hidden sm:inline">{label}</span>
-                </button>
+                </Link>
               );
-            }
+            })}
+          </nav>
 
-            return (
-              <Link key={id} href={href} className={className}>
-                <Icon size={16} />
-                <span className="hidden sm:inline">{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}

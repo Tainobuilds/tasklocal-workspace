@@ -20,6 +20,7 @@ interface Props {
   customers: any[];
   onCreateListing: (formData: ListingFormData) => Promise<boolean>;
   onEditListing: (listingId: string, formData: ListingFormData) => Promise<boolean>;
+  onToggleListingStatus: (listingId: string, currentStatus: string) => Promise<boolean>;
 }
 
 const EMPTY_FORM: ListingFormData = { title: '', service_type: '', price: '', description: '', availability: [] };
@@ -94,7 +95,15 @@ const getListingStrength = (formData: typeof EMPTY_FORM) => {
   return { score, label: 'Weak', barClass: 'bg-red-400', textClass: 'text-red-600' };
 };
 
-export default function ProviderDashboard({ listings, bookings, realBookings, customers, onCreateListing, onEditListing }: Props) {
+export default function ProviderDashboard({
+  listings,
+  bookings,
+  realBookings,
+  customers,
+  onCreateListing,
+  onEditListing,
+  onToggleListingStatus,
+}: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,6 +113,8 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
   const [editFormData, setEditFormData] = useState<ListingFormData>(EMPTY_FORM);
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [editSubmitError, setEditSubmitError] = useState<string | null>(null);
+
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'confirmed' | 'completed' | 'cancelled'>('all');
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -163,6 +174,12 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
     .filter((rate) => typeof rate === 'number' && Number.isFinite(rate));
   const averageHourlyRate = validRates.length ? validRates.reduce((sum, rate) => sum + rate, 0) / validRates.length : null;
 
+  const now = new Date();
+  const payoutsThisMonth = bookings.filter((b) => {
+    const bookedAt = new Date(b.bookedAt);
+    return !Number.isNaN(bookedAt.getTime()) && bookedAt.getMonth() === now.getMonth() && bookedAt.getFullYear() === now.getFullYear();
+  }).length;
+
   const strength = getListingStrength(formData);
 
   return (
@@ -189,6 +206,7 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
           <div>
             <p className="text-xs text-slate-500">Active Services</p>
             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{activeServicesCount}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">of {listings.length} total listings</p>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm flex items-center gap-3">
@@ -198,6 +216,9 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
           <div>
             <p className="text-xs text-slate-500">Total Revenue</p>
             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${totalRevenue.toFixed(2)}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {payoutsThisMonth} completed payout{payoutsThisMonth === 1 ? '' : 's'} this month
+            </p>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm flex items-center gap-3">
@@ -207,6 +228,7 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
           <div>
             <p className="text-xs text-slate-500">Average Hourly Rate</p>
             <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{averageHourlyRate === null ? '—' : `$${averageHourlyRate.toFixed(2)}/hr`}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">across {validRates.length} priced listing{validRates.length === 1 ? '' : 's'}</p>
           </div>
         </div>
       </div>
@@ -236,22 +258,25 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
             const hasValidRate = typeof rate === 'number' && Number.isFinite(rate);
             const description = item.description || item.details || 'No description available.';
             const status = (item.listing_status ?? 'active') as string;
-            const statusBadge =
-              status !== 'active'
-                ? {
-                    flagged: { label: 'Flagged', className: 'bg-amber-50 text-amber-700 border-amber-200' },
-                    pending: { label: 'Pending review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
-                    removed: { label: 'Removed', className: 'bg-red-50 text-red-700 border-red-200' },
-                  }[status] ?? { label: status, className: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700' }
+            // active/removed get the interactive toggle pill below, not a plain
+            // badge — flagged/pending are moderation states a provider can't
+            // casually click away, so they keep the old non-interactive badge.
+            const moderationBadge =
+              status === 'flagged' || status === 'pending'
+                ? { flagged: { label: 'Flagged' }, pending: { label: 'Pending review' } }[status]
                 : null;
+            const isActive = status === 'active';
+            const isToggleable = status === 'active' || status === 'removed';
 
             return (
               <div
                 key={item.listing_id || item.id || idx}
-                className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-md"
+                className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-md flex flex-col"
               >
-                <div className="flex items-baseline justify-between gap-3 mb-2">
-                  <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 truncate">{title}</h3>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 leading-tight line-clamp-2 min-h-[3.5rem]">
+                    {title}
+                  </h3>
                   <span className={`font-bold shrink-0 ${hasValidRate ? 'text-emerald-600' : 'text-slate-400 text-xs'}`}>
                     {hasValidRate ? `$${rate}/hr` : 'Price needs review'}
                   </span>
@@ -260,13 +285,27 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
                   <span className="inline-block text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full">
                     {category}
                   </span>
-                  {statusBadge && (
-                    <span className={`inline-block text-[11px] font-medium border px-2 py-0.5 rounded-full ${statusBadge.className}`}>
-                      {statusBadge.label}
+                  {moderationBadge && (
+                    <span className="inline-block text-[11px] font-medium border px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border-amber-200">
+                      {moderationBadge.label}
                     </span>
                   )}
+                  {isToggleable && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleListingStatus(item.listing_id, status)}
+                      title={isActive ? 'Click to deactivate this listing' : 'Click to reactivate this listing'}
+                      className={`inline-block text-[11px] font-medium border px-2 py-0.5 rounded-full transition-colors ${
+                        isActive
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {isActive ? 'Active' : 'Inactive'}
+                    </button>
+                  )}
                 </div>
-                <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{description}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 flex-1">{description}</p>
                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                   <button
                     onClick={() => openEditModal(item)}
@@ -278,14 +317,47 @@ export default function ProviderDashboard({ listings, bookings, realBookings, cu
               </div>
             );
           })}
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-2xl p-5 min-h-[10rem] text-stone-500 dark:text-stone-400 transition-all hover:border-brand-primary hover:text-brand-primary dark:hover:border-emerald-500 dark:hover:text-emerald-400 hover:bg-stone-50 dark:hover:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          >
+            <span className="h-9 w-9 rounded-full border-2 border-current flex items-center justify-center">
+              <Plus size={18} />
+            </span>
+            <span className="text-sm font-medium">Create New Listing</span>
+          </button>
         </div>
       )}
 
       {realBookings.length > 0 && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Customer Bookings</h2>
+          <div className="flex items-center gap-1.5 mb-3">
+            {(['all', 'confirmed', 'completed', 'cancelled'] as const).map((filterKey) => (
+              <button
+                key={filterKey}
+                type="button"
+                onClick={() => setBookingFilter(filterKey)}
+                className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors capitalize ${
+                  bookingFilter === filterKey
+                    ? 'bg-brand-primary border-brand-primary text-white'
+                    : 'bg-white dark:bg-slate-900 border-stone-200 dark:border-stone-800 text-slate-600 dark:text-slate-400 hover:bg-stone-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                {filterKey}
+              </button>
+            ))}
+          </div>
           <div className="space-y-2">
-            {realBookings.map((booking, idx) => {
+            {realBookings
+              .filter((booking) => {
+                if (bookingFilter === 'all') return true;
+                const status = typeof booking.booking_status === 'string' ? booking.booking_status : 'confirmed';
+                return status === bookingFilter;
+              })
+              .map((booking, idx) => {
               const listing = listings.find((item) => item.listing_id === booking.listing_id);
               const listingTitle = listing?.title || booking.listing_id || 'Unknown service';
               const status = typeof booking.booking_status === 'string' ? booking.booking_status : 'confirmed';
