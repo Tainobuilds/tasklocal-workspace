@@ -240,22 +240,6 @@ export default function ProviderDashboard({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="flex flex-col items-start justify-center gap-3 min-h-[216px] bg-brand-soft dark:bg-slate-900/40 border-[1.5px] border-dashed border-[#C9C4B8] dark:border-stone-700 rounded-2xl p-6 text-left transition-all hover:border-brand-primary dark:hover:border-emerald-500 hover:bg-[#EFEBE2] dark:hover:bg-slate-900/60 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-          >
-            <span className="h-10 w-10 rounded-xl bg-brand-primary text-white flex items-center justify-center">
-              <Plus size={20} strokeWidth={2.4} />
-            </span>
-            <span>
-              <p className="font-display text-[17px] font-bold tracking-tight text-brand-primary dark:text-slate-100">Create New Listing</p>
-              <p className="mt-1.5 text-[13px] text-brand-ink-muted dark:text-slate-400 leading-relaxed max-w-[30ch]">
-                Publish a service and the AI Matcher starts routing requests to you.
-              </p>
-            </span>
-          </button>
-
           {listings.map((item, idx) => {
             const title = item.title || 'Unnamed Service';
             const category = item.service_type || 'General';
