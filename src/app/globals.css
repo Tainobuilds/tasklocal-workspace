@@ -6,12 +6,19 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Spruce brand palette — Japandi-Bento (see DESIGN.md) */
+  /* Spruce brand palette — Japandi-Bento (see DESIGN.md), exact values from
+     the exported design system ("Spruce Design System.dc.html"). */
   --brand-primary: #0b2b22;
+  --brand-primary-hover: #071f18;
   --brand-accent: #d97706;
   --brand-sage: #a3b19b;
   --brand-background: #faf8f5;
   --brand-surface: #ffffff;
+  --brand-soft: #f4f1ea; /* pill tracks, tags, inputs, dashed CTA bg */
+  --brand-slate: #78716c; /* kicker/caption text */
+  --brand-ink-muted: #57534e; /* body copy, category tags, "Completed" pill text */
+  --brand-line: #e7e5e4; /* borders */
+  --brand-amber-tint: #fbf0e0; /* flagged badge bg */
 }
 
 @theme inline {
@@ -19,12 +26,25 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-plus-jakarta-sans);
+  --font-token-mono: var(--font-jetbrains-mono);
 
   --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
   --color-brand-accent: var(--brand-accent);
   --color-brand-sage: var(--brand-sage);
   --color-brand-background: var(--brand-background);
   --color-brand-surface: var(--brand-surface);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-slate: var(--brand-slate);
+  --color-brand-ink-muted: var(--brand-ink-muted);
+  --color-brand-line: var(--brand-line);
+  --color-brand-amber-tint: var(--brand-amber-tint);
+
+  /* Colored shadows (tinted with the forest emerald) from the design
+     system, rather than Tailwind's default neutral-gray shadow-sm/md. */
+  --shadow-spruce-sm: 0 1px 2px rgba(11, 43, 34, 0.05);
+  --shadow-spruce-md: 0 6px 18px rgba(11, 43, 34, 0.09);
 }
 
 body {

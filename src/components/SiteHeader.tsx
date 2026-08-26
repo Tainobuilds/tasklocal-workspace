@@ -29,7 +29,7 @@ export default function SiteHeader({ active, onSelect }: Props) {
     <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <SpruceLogo textClassName="text-emerald-400" />
+          <SpruceLogo variant="reversed" />
           <span className="font-semibold text-lg tracking-tight hidden sm:inline">Spruce</span>
         </Link>
 
