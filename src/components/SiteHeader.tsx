@@ -11,7 +11,7 @@ export type SiteTab = 'provider' | 'chatbot' | 'customer';
 
 const TABS: Array<{ id: SiteTab; label: string; icon: LucideIcon; href: string }> = [
   { id: 'provider', label: 'Provider App', icon: Store, href: '/provider' },
-  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/provider?tab=chatbot' },
+  { id: 'chatbot', label: 'Matching Chatbot', icon: MessageSquare, href: '/chat' },
   { id: 'customer', label: 'Customer App', icon: Search, href: '/browse' },
 ];
 
