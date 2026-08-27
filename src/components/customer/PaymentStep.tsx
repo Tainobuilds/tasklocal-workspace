@@ -172,6 +172,9 @@ function CheckoutForm({
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tracks the PaymentElement's own validity so "Pay" only lights up once the
+  // card details are actually complete, rather than as soon as Stripe.js loads.
+  const [cardComplete, setCardComplete] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -198,7 +201,7 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+      <PaymentElement onChange={(event) => setCardComplete(event.complete)} />
 
       {error && (
         <p className="text-sm text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg p-3">
@@ -221,7 +224,7 @@ function CheckoutForm({
         </button>
         <button
           type="submit"
-          disabled={!stripe || submitting}
+          disabled={!stripe || !elements || !cardComplete || submitting}
           className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}

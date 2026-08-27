@@ -115,7 +115,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-brand-line dark:border-slate-800 rounded-2xl shadow-xl my-auto">
         <header className="flex items-start justify-between gap-4 p-5 border-b border-brand-line dark:border-slate-800">
           <div>
-            <p className="text-xs uppercase tracking-wider text-brand-accent dark:text-indigo-400 font-semibold">
+            <p className="text-xs uppercase tracking-wider text-brand-accent dark:text-emerald-400 font-semibold">
               {STEP_LABELS[step]}
             </p>
             <h2 className="font-display font-semibold text-brand-primary dark:text-slate-100 mt-1 leading-snug">

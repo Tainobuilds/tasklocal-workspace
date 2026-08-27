@@ -6,7 +6,9 @@ import { PERIOD_HOURS } from '@/lib/sanitize';
 import { WEEKDAYS, type CleanListing, type Period, type Weekday } from '@/lib/types';
 
 /** How far ahead a customer may book. */
-const WEEKS_SHOWN = 4;
+const HORIZON_DAYS = 60;
+/** Grid rows needed to comfortably cover the horizon from the current week's Monday. */
+const WEEKS_SHOWN = Math.ceil((HORIZON_DAYS + 7) / 7);
 
 /** `YYYY-MM-DD` in the customer's own timezone. */
 function toDateKey(date: Date): string {
@@ -60,6 +62,10 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
     today.setHours(0, 0, 0, 0);
     const todayKey = toDateKey(today);
 
+    const horizon = new Date(today);
+    horizon.setDate(horizon.getDate() + HORIZON_DAYS);
+    const horizonKey = toDateKey(horizon);
+
     // Start the grid on the Monday of the current week so columns line up.
     const start = new Date(today);
     start.setDate(start.getDate() - ((today.getDay() + 6) % 7));
@@ -76,7 +82,7 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
         dayOfMonth: date.getDate(),
         isPast: key < todayKey,
         isToday: key === todayKey,
-        selectable: periods.length > 0 && key >= todayKey,
+        selectable: periods.length > 0 && key >= todayKey && key <= horizonKey,
       };
     });
 
@@ -117,7 +123,7 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
                   isSelected
                     ? 'bg-brand-primary border-brand-primary text-white font-semibold'
                     : day.selectable
-                      ? 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-200 hover:border-brand-primary dark:hover:border-indigo-600'
+                      ? 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-200 hover:border-brand-primary dark:hover:border-brand-primary'
                       : 'bg-brand-soft/40 dark:bg-slate-950/40 border-transparent text-brand-slate/60 dark:text-slate-700 cursor-not-allowed'
                 } ${day.isToday && !isSelected ? 'ring-1 ring-brand-slate dark:ring-slate-600' : ''}`}
               >
@@ -143,7 +149,7 @@ export default function BookingCalendar({ listing, selectedDate, selectedPeriod,
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                   selectedPeriod === period
                     ? 'bg-brand-primary border-brand-primary text-white'
-                    : 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-300 hover:border-brand-primary dark:hover:border-indigo-600'
+                    : 'bg-brand-soft dark:bg-slate-950 border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-300 hover:border-brand-primary dark:hover:border-brand-primary'
                 }`}
               >
                 {period === 'AM' ? 'Morning (9:00 AM)' : 'Afternoon (2:00 PM)'}
