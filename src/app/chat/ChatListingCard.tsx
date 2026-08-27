@@ -5,6 +5,7 @@ import { CalendarClock, Sparkles } from 'lucide-react';
 
 import type { Intent, Match } from '@/lib/chat/types';
 import { formatUsd } from '@/lib/pricing';
+import { CATEGORY_PILL_CLASSES, SERVICE_TYPE_LABELS } from '@/lib/types';
 
 /**
  * A matched listing, rendered for the chat.
@@ -12,8 +13,10 @@ import { formatUsd } from '@/lib/pricing';
  * Deliberately a separate component from `src/components/customer/ListingCard`
  * rather than a copy of it or a change to it: that card is Product B's, it
  * requires an `onBook` handler, and Product C does not book. It is matched
- * visually — same shell, same teal accent, same slot chips, both themes — so
- * that swapping to a genuinely shared card later is a small change.
+ * visually — the Spruce bento shell from DESIGN.md (rounded-2xl, brand-line
+ * border, shadow-spruce-sm, brand-primary title and price), the shared
+ * category pill, both themes — so that swapping to a genuinely shared card
+ * later is a small change.
  *
  * The whole card links to Product B's listing detail page at
  * `/listings/[listingId]`, using the same base and hover/focus classes their
@@ -24,12 +27,6 @@ import { formatUsd } from '@/lib/pricing';
  * one it was matched on, and `matchListings` has already proved that id
  * against the catalogue that page reads from.
  */
-
-const SERVICE_LABELS: Record<Match['service_type'], string> = {
-  cleaning: 'Cleaning',
-  handyman: 'Handyman',
-  moving: 'Moving',
-};
 
 /**
  * Formats the price according to its `price_type`, as the brief requires.
@@ -85,30 +82,26 @@ export default function ChatListingCard({ match, intent }: Props) {
   return (
     <Link
       href={`/listings/${match.listing_id}`}
-      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all focus:outline-none focus-visible:border-teal-500"
+      className="bg-white dark:bg-slate-900 border border-brand-line dark:border-stone-800 rounded-2xl p-5 flex flex-col gap-3 shadow-spruce-sm transition-all hover:shadow-spruce-md hover:-translate-y-0.5 hover:border-[#D6D3D1] dark:hover:border-stone-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
     >
       <div className="flex justify-between items-start gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
-          {SERVICE_LABELS[match.service_type]}
-        </span>
-        {/* emerald-600 in light, not the card's emerald-400, which is too low
-            contrast on white. See the note in the step-4 report. */}
-        <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+        <span className={CATEGORY_PILL_CLASSES}>{SERVICE_TYPE_LABELS[match.service_type]}</span>
+        <span className="font-display shrink-0 font-bold text-[15px] whitespace-nowrap text-brand-primary dark:text-slate-100">
           {formatPrice(match)}
         </span>
       </div>
 
       <div>
-        <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 leading-snug">
+        <h3 className="font-display text-[17px] font-bold tracking-tight leading-tight text-brand-primary dark:text-slate-100">
           {match.title}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{match.provider_name}</p>
+        <p className="text-sm text-brand-slate dark:text-slate-400 mt-1">{match.provider_name}</p>
       </div>
 
-      <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{match.description}</p>
+      <p className="text-brand-ink-muted dark:text-slate-400 text-sm line-clamp-2">{match.description}</p>
 
       <div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-brand-slate dark:text-slate-400 mb-2">
           <CalendarClock size={13} />
           <span>Availability</span>
         </div>
@@ -117,18 +110,18 @@ export default function ChatListingCard({ match, intent }: Props) {
             {match.availability.map((slot) => (
               <span
                 key={slot}
-                className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md"
+                className="text-xs bg-brand-soft dark:bg-slate-800 border border-brand-line dark:border-slate-700 text-brand-ink-muted dark:text-slate-300 px-2 py-0.5 rounded-md"
               >
                 {slot}
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-slate-500 italic">Contact provider for availability</p>
+          <p className="text-xs text-brand-slate dark:text-slate-400 italic">Contact provider for availability</p>
         )}
       </div>
 
-      <p className="flex items-start gap-1.5 text-xs text-teal-700 dark:text-teal-400 border-t border-slate-200 dark:border-slate-800 pt-3 mt-auto">
+      <p className="flex items-start gap-1.5 text-xs text-brand-primary dark:text-emerald-400 border-t border-brand-line dark:border-slate-800 pt-3 mt-auto">
         <Sparkles size={13} className="shrink-0 mt-px" />
         <span>
           <span className="font-medium">Why this matched:</span> {whyThisMatched(match, intent)}

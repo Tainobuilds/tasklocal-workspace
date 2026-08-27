@@ -13,6 +13,8 @@ import {
   type AssistantTurn,
 } from '@/lib/chat/transcript';
 
+import SpruceLogo from '@/components/SpruceLogo';
+
 import ChatListingCard from './ChatListingCard';
 
 /**
@@ -49,7 +51,7 @@ function AssistantBlock({ turn }: { turn: AssistantTurn }) {
         className={`self-start max-w-[85%] px-4 py-2 rounded-2xl rounded-bl-sm text-sm ${
           turn.failed
             ? 'flex items-start gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300'
-            : 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+            : 'bg-brand-soft dark:bg-slate-900 border border-brand-line dark:border-slate-800 text-brand-ink-muted dark:text-slate-300'
         }`}
       >
         {turn.failed && <TriangleAlert size={15} className="shrink-0 mt-0.5" />}
@@ -68,7 +70,7 @@ function AssistantBlock({ turn }: { turn: AssistantTurn }) {
       )}
 
       {!turn.failed && turn.matches.length === 0 && (
-        <p className="self-start flex items-center gap-2 text-xs text-slate-500">
+        <p className="self-start flex items-center gap-2 text-xs text-brand-slate dark:text-slate-400">
           <SearchX size={14} />
           No listings to show for that one.
         </p>
@@ -160,19 +162,17 @@ export default function ChatPage() {
     // min-h-screen, matching /browse and /: the body is only min-height, so a
     // percentage height here would not resolve and the input bar would float
     // mid-page instead of sitting at the bottom of the viewport.
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
-      <header className="border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col bg-brand-background dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+      <header className="border-b border-brand-line dark:border-slate-800 backdrop-blur-md bg-brand-background/90 dark:bg-slate-900/80 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center font-bold text-white">
-              TL
-            </div>
+            <SpruceLogo className="h-[26px] w-[26px] shrink-0" />
           </Link>
           <div className="min-w-0">
-            <h1 className="font-semibold text-lg tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+            <h1 className="font-display font-extrabold text-lg tracking-tight text-brand-primary dark:text-slate-100 leading-tight">
               Find a service
             </h1>
-            <p className="text-xs text-slate-500">Describe the job and I will find listings that fit.</p>
+            <p className="text-xs text-brand-slate dark:text-slate-400">Describe the job and I will find listings that fit.</p>
           </div>
         </div>
       </header>
@@ -180,7 +180,7 @@ export default function ChatPage() {
       <main className="flex-1 w-full max-w-3xl mx-auto px-6 pt-6 pb-28">
         {turns.length === 0 ? (
           <div className="mt-10 text-center">
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-brand-ink-muted dark:text-slate-400">
               Tell me what you need doing, in your own words.
             </p>
             <div className="mt-5 flex flex-wrap gap-2 justify-center">
@@ -189,7 +189,7 @@ export default function ChatPage() {
                   key={example}
                   type="button"
                   onClick={() => send(example)}
-                  className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-500 px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                  className="text-sm text-brand-ink-muted dark:text-slate-300 bg-brand-soft dark:bg-slate-900 border border-brand-line dark:border-slate-800 hover:border-brand-primary dark:hover:border-emerald-400 px-3 py-1.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
                 >
                   {example}
                 </button>
@@ -202,7 +202,7 @@ export default function ChatPage() {
               turn.role === 'user' ? (
                 <p
                   key={index}
-                  className="self-end max-w-[85%] bg-teal-600 text-white px-4 py-2 rounded-2xl rounded-br-sm text-sm whitespace-pre-wrap break-words"
+                  className="self-end max-w-[85%] bg-brand-primary text-white px-4 py-2 rounded-2xl rounded-br-sm text-sm whitespace-pre-wrap break-words"
                 >
                   {turn.content}
                 </p>
@@ -212,7 +212,7 @@ export default function ChatPage() {
             )}
 
             {pending && (
-              <p className="self-start flex items-center gap-2 text-sm text-slate-500">
+              <p className="self-start flex items-center gap-2 text-sm text-brand-slate dark:text-slate-400">
                 <Loader2 size={15} className="animate-spin" />
                 Searching the listings…
               </p>
@@ -223,7 +223,7 @@ export default function ChatPage() {
         )}
       </main>
 
-      <div className="sticky bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md">
+      <div className="sticky bottom-0 border-t border-brand-line dark:border-slate-800 bg-brand-background/90 dark:bg-slate-950/90 backdrop-blur-md">
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -240,13 +240,13 @@ export default function ChatPage() {
             onChange={(event) => setInput(event.target.value)}
             placeholder="Describe the job…"
             autoComplete="off"
-            className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="flex-1 bg-brand-soft dark:bg-slate-900 border border-brand-line dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-brand-slate dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
           />
           <button
             type="submit"
             disabled={pending || input.trim().length === 0}
             aria-label="Search listings"
-            className="bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            className="bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
           >
             {pending ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
           </button>
