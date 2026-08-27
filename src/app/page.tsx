@@ -20,19 +20,19 @@ const FEATURES: Array<{
     icon: Sparkles,
     tint: 'accent',
     title: 'Smart AI Matching',
-    description: 'Intelligent service routing pairs each request with the best-fit local pro — no manual searching required.',
+    description: 'Describe unusual or complex jobs in plain English and match with active local pros instantly.',
   },
   {
     icon: CalendarClock,
     tint: 'sage',
-    title: 'Instant Provider Booking',
-    description: 'Transparent hourly rates and real-time scheduling mean customers know exactly what they’re getting, and when.',
+    title: 'Upfront Pricing & Calendar',
+    description: 'Transparent hourly rates with a live 60-day calendar and zero hidden fees.',
   },
   {
     icon: Layers,
     tint: 'accent',
     title: 'Two-Sided Platform',
-    description: 'Purpose-built tools for both sides of the marketplace — customers book with confidence, providers manage and grow with ease.',
+    description: 'Seamless booking and Stripe payments for customers, unified workspace for providers.',
   },
 ];
 
@@ -54,8 +54,8 @@ export default function LandingPage() {
             <span className="text-brand-accent">Intelligent</span> Local Services Marketplace
           </h1>
           <p className="mt-6 text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Our AI-powered matching engine connects customers with the right local pro in
-            seconds — transparent pricing, real-time scheduling, and zero guesswork.
+            Solving local service search friction, pricing ambiguity, and booking hassle with
+            AI matching, transparent rates, and instant scheduling.
           </p>
         </section>
 
@@ -65,7 +65,7 @@ export default function LandingPage() {
             {FEATURES.map(({ icon: Icon, tint, title, description }) => (
               <div
                 key={title}
-                className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-6 shadow-sm"
+                className="bg-white dark:bg-slate-900 border border-brand-line dark:border-stone-800 rounded-2xl p-6 shadow-spruce-sm"
               >
                 <div
                   className={`h-11 w-11 rounded-xl flex items-center justify-center mb-4 ${
