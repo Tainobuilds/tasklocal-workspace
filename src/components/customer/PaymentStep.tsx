@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { AlertTriangle, Loader2, Lock } from 'lucide-react';
@@ -33,6 +34,7 @@ interface Props {
 
 export default function PaymentStep({ listing, onPaid, onBack }: Props) {
   const [status, setStatus] = useState<Status>({ kind: 'loading' });
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +79,7 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
 
   if (status.kind === 'loading') {
     return (
-      <div className="flex items-center gap-2 text-slate-400 text-sm py-8 justify-center">
+      <div className="flex items-center gap-2 text-brand-ink-muted dark:text-slate-400 text-sm py-8 justify-center">
         <Loader2 size={16} className="animate-spin" /> Preparing secure payment…
       </div>
     );
@@ -86,14 +88,14 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
   if (status.kind === 'unconfigured') {
     return (
       <div className="space-y-4">
-        <div className="flex gap-3 bg-amber-950/40 border border-amber-800/60 rounded-xl p-4">
-          <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+        <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-4">
+          <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium text-amber-300">Stripe is not configured</p>
-            <p className="text-slate-400 mt-1">
-              Add <code className="text-slate-300">STRIPE_SECRET_KEY</code> and{' '}
-              <code className="text-slate-300">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to{' '}
-              <code className="text-slate-300">.env.local</code> to take real test payments. You can
+            <p className="font-medium text-amber-800 dark:text-amber-300">Stripe is not configured</p>
+            <p className="text-brand-ink-muted dark:text-slate-400 mt-1">
+              Add <code className="text-slate-700 dark:text-slate-300">STRIPE_SECRET_KEY</code> and{' '}
+              <code className="text-slate-700 dark:text-slate-300">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to{' '}
+              <code className="text-slate-700 dark:text-slate-300">.env.local</code> to take real test payments. You can
               continue without paying to preview the rest of the flow.
             </p>
           </div>
@@ -110,14 +112,14 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
   if (status.kind === 'error') {
     return (
       <div className="space-y-4">
-        <div className="flex gap-3 bg-rose-950/40 border border-rose-800/60 rounded-xl p-4 text-sm">
-          <AlertTriangle size={18} className="text-rose-400 shrink-0 mt-0.5" />
-          <p className="text-rose-200">{status.message}</p>
+        <div className="flex gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-xl p-4 text-sm">
+          <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+          <p className="text-rose-700 dark:text-rose-200">{status.message}</p>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-slate-400 hover:text-slate-200"
+          className="text-sm text-brand-ink-muted dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
         >
           Back
         </button>
@@ -128,7 +130,7 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
   const stripe = getStripePromise();
   if (!stripe) {
     return (
-      <div className="text-sm text-slate-400">
+      <div className="text-sm text-brand-ink-muted dark:text-slate-400">
         Stripe could not be loaded in the browser.
         <button type="button" onClick={onBack} className="ml-2 underline">
           Back
@@ -142,7 +144,10 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
       stripe={stripe}
       options={{
         clientSecret: status.clientSecret,
-        appearance: { theme: 'night', variables: { colorPrimary: '#6366f1' } },
+        appearance: {
+          theme: resolvedTheme === 'dark' ? 'night' : 'stripe',
+          variables: { colorPrimary: '#0b2b22' },
+        },
       }}
     >
       <CheckoutForm
@@ -167,6 +172,9 @@ function CheckoutForm({
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tracks the PaymentElement's own validity so "Pay" only lights up once the
+  // card details are actually complete, rather than as soon as Stripe.js loads.
+  const [cardComplete, setCardComplete] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -193,15 +201,15 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+      <PaymentElement onChange={(event) => setCardComplete(event.complete)} />
 
       {error && (
-        <p className="text-sm text-rose-400 bg-rose-950/40 border border-rose-800/60 rounded-lg p-3">
+        <p className="text-sm text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg p-3">
           {error}
         </p>
       )}
 
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-500">
         <Lock size={12} /> Card details are handled directly by Stripe.
       </div>
 
@@ -210,14 +218,14 @@ function CheckoutForm({
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="px-4 py-2 rounded-lg text-sm text-slate-300 border border-slate-800 hover:border-slate-700 disabled:opacity-50"
+          className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-50"
         >
           Back
         </button>
         <button
           type="submit"
-          disabled={!stripe || submitting}
-          className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+          disabled={!stripe || !elements || !cardComplete || submitting}
+          className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
           {total === null ? 'Pay' : `Pay ${formatUsd(total)}`}
@@ -241,14 +249,14 @@ function StepButtons({
       <button
         type="button"
         onClick={onBack}
-        className="px-4 py-2 rounded-lg text-sm text-slate-300 border border-slate-800 hover:border-slate-700"
+        className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
       >
         Back
       </button>
       <button
         type="button"
         onClick={onNext}
-        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+        className="flex-1 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg text-sm font-medium transition-colors"
       >
         {nextLabel}
       </button>
