@@ -36,9 +36,9 @@ import ChatListingCard from './ChatListingCard';
  */
 
 const EXAMPLES = [
-  'Clean out my garage and move some boxes',
-  'Cheap cleaning under $80',
   'Fix a leaking kitchen faucet',
+  'Cheap cleaning under $80',
+  'I need a cleaner tomorrow between 3 and 6',
 ];
 
 /** One assistant turn: its sentence, then whatever it actually returned. */
