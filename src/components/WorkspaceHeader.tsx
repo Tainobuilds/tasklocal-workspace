@@ -15,8 +15,10 @@ interface Props {
   onOpenBookings?: () => void;
   /** Browse: links to the customer's real bookings page instead. */
   bookingsHref?: string;
-  /** Provider: opens the AI Matcher drawer locally. Omitted on pages with no
-   * local drawer state (browse), which fall back to a link instead. */
+  /** No longer read: the AI Matcher control navigates to /chat on every page
+   * rather than opening the local drawer. Kept declared so the provider page
+   * still passes it without a change, and so restoring the drawer entry is a
+   * revert of this file alone. */
   onOpenAiMatcher?: () => void;
 }
 
@@ -30,7 +32,7 @@ const PERSONA_SWITCHER: Array<{ id: 'provider' | 'customer'; label: string; icon
 const AI_MATCHER_CLASSES =
   'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-brand-primary dark:text-slate-100 bg-brand-soft dark:bg-slate-800 border border-brand-line dark:border-slate-700 shadow-spruce-sm transition-all hover:text-white hover:border-transparent hover:bg-gradient-to-r hover:from-brand-primary hover:to-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent';
 
-export default function WorkspaceHeader({ active, bookingsBadgeCount, onOpenBookings, bookingsHref, onOpenAiMatcher }: Props) {
+export default function WorkspaceHeader({ active, bookingsBadgeCount, onOpenBookings, bookingsHref }: Props) {
   const { resolvedTheme, setTheme } = useTheme();
   // Avoids a light/dark icon flash before next-themes reports the real value on mount.
   const [mounted, setMounted] = useState(false);
@@ -75,17 +77,10 @@ export default function WorkspaceHeader({ active, bookingsBadgeCount, onOpenBook
           </Link>
 
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap justify-end">
-            {onOpenAiMatcher ? (
-              <button type="button" onClick={onOpenAiMatcher} className={AI_MATCHER_CLASSES}>
-                <Sparkles size={14} />
-                <span className="hidden sm:inline">AI Matcher</span>
-              </button>
-            ) : (
-              <Link href="/provider?tab=chatbot" className={AI_MATCHER_CLASSES}>
-                <Sparkles size={14} />
-                <span className="hidden sm:inline">AI Matcher</span>
-              </Link>
-            )}
+            <Link href="/chat" className={AI_MATCHER_CLASSES}>
+              <Sparkles size={14} />
+              <span className="hidden sm:inline">AI Matcher</span>
+            </Link>
 
             <div className="w-px h-6 bg-brand-line dark:bg-slate-700 hidden sm:block" />
 

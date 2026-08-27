@@ -33,7 +33,7 @@ export default function ListingDetailActions({
           onClick={() => setBooking(true)}
           disabled={blocked !== null}
           title={blocked ?? undefined}
-          className="flex-1 min-w-[10rem] bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+          className="flex-1 min-w-[10rem] bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
           {blocked ? `Unavailable — ${blocked}` : 'Book this service'}
         </button>
@@ -41,7 +41,7 @@ export default function ListingDetailActions({
         <button
           type="button"
           onClick={() => setReporting(true)}
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium border border-slate-800 text-slate-400 hover:text-rose-300 hover:border-rose-800/60 transition-colors"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium border border-brand-line dark:border-slate-800 text-brand-slate dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-300 dark:hover:border-rose-800/60 transition-colors"
         >
           <Flag size={14} />
           Report

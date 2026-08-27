@@ -427,7 +427,7 @@ export default function ProviderDashboard({
       {/* Create New Listing Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
+          <div className="bg-white dark:bg-slate-900 border border-brand-line dark:border-stone-800 rounded-2xl w-full max-w-md p-6 relative shadow-spruce-sm">
             <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
               <X size={20} />
             </button>

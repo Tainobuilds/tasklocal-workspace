@@ -110,15 +110,17 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
       role="dialog"
       aria-modal="true"
       aria-label={`Book ${listing.title}`}
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-brand-primary/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 sm:p-8"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm p-4 sm:p-8"
     >
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-brand-line dark:border-slate-800 rounded-2xl shadow-spruce-md my-auto">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-brand-line dark:border-slate-800 rounded-2xl shadow-xl my-auto">
         <header className="flex items-start justify-between gap-4 p-5 border-b border-brand-line dark:border-slate-800">
           <div>
-            <p className="text-xs uppercase tracking-wider text-brand-primary dark:text-emerald-400 font-semibold">
+            <p className="text-xs uppercase tracking-wider text-brand-accent dark:text-emerald-400 font-semibold">
               {STEP_LABELS[step]}
             </p>
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100 mt-1 leading-snug">{listing.title}</h2>
+            <h2 className="font-display font-semibold text-brand-primary dark:text-slate-100 mt-1 leading-snug">
+              {listing.title}
+            </h2>
             <p className="text-sm text-brand-ink-muted dark:text-slate-400">
               {listing.provider?.provider_name ?? 'Provider information unavailable'}
             </p>
@@ -127,7 +129,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
             type="button"
             onClick={onClose}
             aria-label="Close booking"
-            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            className="text-brand-slate dark:text-slate-500 hover:text-brand-primary dark:hover:text-slate-200 transition-colors"
           >
             <X size={18} />
           </button>
@@ -135,8 +137,8 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
 
         {!signedIn ? (
           <div className="p-8 text-center space-y-3">
-            <LogIn size={32} className="text-slate-400 dark:text-slate-500 mx-auto" />
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Sign in to book</h3>
+            <LogIn size={32} className="text-brand-slate dark:text-slate-500 mx-auto" />
+            <h3 className="font-semibold text-brand-primary dark:text-slate-100">Sign in to book</h3>
             <p className="text-sm text-brand-ink-muted dark:text-slate-400">
               Bookings are recorded against your account, so you need to be signed in first.
             </p>
@@ -155,7 +157,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                   <div
                     key={s}
                     className={`h-1 flex-1 rounded-full ${
-                      index <= STEP_ORDER.indexOf(step) ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-800'
+                      index <= STEP_ORDER.indexOf(step) ? 'bg-brand-primary dark:bg-emerald-500' : 'bg-brand-soft dark:bg-slate-800'
                     }`}
                   />
                 ))}
@@ -188,7 +190,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                     onClick={async () => {
                       if (await checkSlot()) setStep('confirm');
                     }}
-                    className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
                   >
                     {submitting && <Loader2 size={14} className="animate-spin" />}
                     {date && period ? 'Continue to review' : 'Select a day and time'}
@@ -198,7 +200,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
 
               {step === 'confirm' && date && period && (
                 <div className="space-y-5">
-                  <dl className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                  <dl className="divide-y divide-brand-line dark:divide-slate-800 text-sm">
                     <SummaryRow label="Service" value={listing.title} />
                     <SummaryRow
                       label="Provider"
@@ -215,8 +217,8 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                   </dl>
 
                   <label className="block">
-                    <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">Service address</span>
-                    <p className="text-xs text-slate-500 dark:text-slate-500 mb-1.5">
+                    <span className="text-sm text-brand-ink-muted dark:text-slate-300 font-medium">Service address</span>
+                    <p className="text-xs text-brand-slate dark:text-slate-500 mb-1.5">
                       {defaultAddress
                         ? 'Pre-filled from your saved address — edit if this job is somewhere else.'
                         : 'No saved address on your account yet.'}
@@ -226,7 +228,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                       onChange={(event) => setAddress(event.target.value)}
                       rows={3}
                       placeholder="Street, unit, city, state, ZIP"
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent resize-y"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-brand-ink-muted dark:text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent resize-y"
                     />
                   </label>
 
@@ -235,7 +237,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                       type="button"
                       onClick={() => setStep('schedule')}
                       disabled={submitting}
-                      className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-50"
+                      className="px-4 py-2 rounded-lg text-sm text-brand-ink-muted dark:text-slate-300 border border-brand-line dark:border-slate-800 hover:border-brand-slate dark:hover:border-slate-700 disabled:opacity-50"
                     >
                       Back
                     </button>
@@ -246,7 +248,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                         // Last gate before the card is charged.
                         if (await checkSlot()) setStep('payment');
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       {submitting && <Loader2 size={14} className="animate-spin" />}
                       Confirm and pay
@@ -268,16 +270,18 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
 
               {step === 'done' && date && period && (
                 <div className="text-center space-y-3 py-4">
-                  <CheckCircle2 size={40} className="text-emerald-600 dark:text-emerald-400 mx-auto" />
-                  <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100">Booking confirmed</h3>
+                  <CheckCircle2 size={40} className="text-brand-primary dark:text-emerald-400 mx-auto" />
+                  <h3 className="font-display font-semibold text-lg text-brand-primary dark:text-slate-100">
+                    Booking confirmed
+                  </h3>
                   <p className="text-sm text-brand-ink-muted dark:text-slate-400">
                     {listing.title} on {describeSlot(date, period)}.
                   </p>
                   {bookingId && (
-                    <p className="text-xs text-slate-500 dark:text-slate-500 font-mono">Reference: {bookingId}</p>
+                    <p className="text-xs text-brand-slate dark:text-slate-500 font-mono">Reference: {bookingId}</p>
                   )}
                   {!paymentIntentId && (
-                    <p className="text-xs text-slate-500 dark:text-slate-500">
+                    <p className="text-xs text-brand-slate dark:text-slate-500">
                       No payment was taken because Stripe is not configured on this server.
                     </p>
                   )}
@@ -285,7 +289,7 @@ export default function BookingFlow({ listing, defaultAddress, signedIn, onClose
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-5 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                      className="px-5 py-2 rounded-lg text-sm text-brand-ink-muted dark:text-slate-300 border border-brand-line dark:border-slate-800 hover:border-brand-slate dark:hover:border-slate-700"
                     >
                       Keep browsing
                     </button>
@@ -323,10 +327,10 @@ function SummaryRow({
 }) {
   return (
     <div className="flex justify-between gap-6 py-2.5">
-      <dt className="text-slate-500 dark:text-slate-500 shrink-0">{label}</dt>
+      <dt className="text-brand-slate dark:text-slate-500 shrink-0">{label}</dt>
       <dd
         className={`text-right whitespace-pre-line ${
-          emphasis ? 'text-emerald-700 dark:text-emerald-400 font-semibold' : 'text-slate-900 dark:text-slate-200'
+          emphasis ? 'text-brand-primary dark:text-emerald-400 font-semibold' : 'text-brand-ink-muted dark:text-slate-200'
         }`}
       >
         {value}

@@ -93,9 +93,9 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
           <div className="text-sm">
             <p className="font-medium text-amber-800 dark:text-amber-300">Stripe is not configured</p>
             <p className="text-brand-ink-muted dark:text-slate-400 mt-1">
-              Add <code className="text-slate-700 dark:text-slate-300">STRIPE_SECRET_KEY</code> and{' '}
-              <code className="text-slate-700 dark:text-slate-300">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to{' '}
-              <code className="text-slate-700 dark:text-slate-300">.env.local</code> to take real test payments. You can
+              Add <code className="text-brand-ink-muted dark:text-slate-300">STRIPE_SECRET_KEY</code> and{' '}
+              <code className="text-brand-ink-muted dark:text-slate-300">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to{' '}
+              <code className="text-brand-ink-muted dark:text-slate-300">.env.local</code> to take real test payments. You can
               continue without paying to preview the rest of the flow.
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-brand-ink-muted dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+          className="text-sm text-brand-ink-muted dark:text-slate-400 hover:text-brand-primary dark:hover:text-slate-200"
         >
           Back
         </button>
@@ -146,7 +146,7 @@ export default function PaymentStep({ listing, onPaid, onBack }: Props) {
         clientSecret: status.clientSecret,
         appearance: {
           theme: resolvedTheme === 'dark' ? 'night' : 'stripe',
-          variables: { colorPrimary: '#0b2b22' },
+          variables: { colorPrimary: resolvedTheme === 'dark' ? '#34d399' : '#0b2b22' },
         },
       }}
     >
@@ -209,7 +209,7 @@ function CheckoutForm({
         </p>
       )}
 
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs text-brand-slate dark:text-slate-500">
         <Lock size={12} /> Card details are handled directly by Stripe.
       </div>
 
@@ -218,14 +218,14 @@ function CheckoutForm({
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-50"
+          className="px-4 py-2 rounded-lg text-sm text-brand-ink-muted dark:text-slate-300 border border-brand-line dark:border-slate-800 hover:border-brand-slate dark:hover:border-slate-700 disabled:opacity-50"
         >
           Back
         </button>
         <button
           type="submit"
           disabled={!stripe || !elements || !cardComplete || submitting}
-          className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-soft dark:disabled:bg-slate-800 disabled:text-brand-slate dark:disabled:text-slate-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
           {total === null ? 'Pay' : `Pay ${formatUsd(total)}`}
@@ -249,7 +249,7 @@ function StepButtons({
       <button
         type="button"
         onClick={onBack}
-        className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+        className="px-4 py-2 rounded-lg text-sm text-brand-ink-muted dark:text-slate-300 border border-brand-line dark:border-slate-800 hover:border-brand-slate dark:hover:border-slate-700"
       >
         Back
       </button>
